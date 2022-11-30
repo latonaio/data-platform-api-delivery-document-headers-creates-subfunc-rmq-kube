@@ -1,123 +1,78 @@
 package dpfm_api_output_formatter
 
 import (
-	api_input_reader "data-platform-api-delivery-document-headers-creates-subfunc/API_Input_Reader"
-	api_processing_data_formatter "data-platform-api-delivery-document-headers-creates-subfunc/API_Processing_Data_Formatter"
-	"encoding/json"
+	api_input_reader "data-platform-api-invoice-document-headers-creates-subfunc-rmq/API_Input_Reader"
+	api_processing_data_formatter "data-platform-api-invoice-document-headers-creates-subfunc-rmq/API_Processing_Data_Formatter"
 )
 
 func ConvertToHeader(
 	sdc *api_input_reader.SDC,
 	psdc *api_processing_data_formatter.SDC,
 ) (*[]Header, error) {
-	orderID := psdc.OrderID
+	calculateInvoiceDocument := psdc.CalculateInvoiceDocument
 	headerOrdersHeader := psdc.HeaderOrdersHeader
-	calculateDeliveryDocument := psdc.CalculateDeliveryDocument
-	headers := make([]Header, 0, len(*headerOrdersHeader))
+	header := make([]Header, 0, len(*headerOrdersHeader))
 
 	for _, v := range *headerOrdersHeader {
-		orderId := v.OrderID
-		for _, orderID := range *orderID {
-			if *orderID.OrderID != *orderId {
-				continue
-			}
-			header := Header{}
-			inputHeader := sdc.DeliveryDocument
-			inputData, err := json.Marshal(inputHeader)
-			if err != nil {
-				return nil, err
-			}
-			err = json.Unmarshal(inputData, &header)
-			if err != nil {
-				return nil, err
-			}
-
-			data, err := json.Marshal(v)
-			if err != nil {
-				return nil, err
-			}
-			err = json.Unmarshal(data, &header)
-			if err != nil {
-				return nil, err
-			}
-
-			header.DeliveryDocument = calculateDeliveryDocument.DeliveryDocumentLatestNumber
-			header.ReferenceDocument = orderID.ReferenceDocument
-			headers = append(headers, header)
-		}
+		header = append(header, Header{
+			InvoiceDocument:            calculateInvoiceDocument.InvoiceDocumentLatestNumber,
+			CreationDate:               sdc.InvoiceDocument.CreationDate,
+			LastChangeDate:             sdc.InvoiceDocument.LastChangeDate,
+			BillToParty:                v.BillToParty,
+			BillFromParty:              v.BillFromParty,
+			BillToCountry:              v.BillToCountry,
+			BillFromCountry:            v.BillFromCountry,
+			InvoiceDocumentDate:        sdc.InvoiceDocument.InvoiceDocumentDate,
+			InvoiceDocumentTime:        sdc.InvoiceDocument.InvoiceDocumentTime,
+			InvoicePeriodStartDate:     sdc.InvoiceDocument.InvoicePeriodStartDate,
+			InvoicePeriodEndDate:       sdc.InvoiceDocument.InvoicePeriodEndDate,
+			AccountingPostingDate:      sdc.InvoiceDocument.AccountingPostingDate,
+			InvoiceDocumentIsCancelled: sdc.InvoiceDocument.InvoiceDocumentIsCancelled,
+			CancelledInvoiceDocument:   sdc.InvoiceDocument.CancelledInvoiceDocument,
+			IsExportImportDelivery:     sdc.InvoiceDocument.IsExportDelivery,
+			// HeaderBillingIsConfirmed:   sdc.InvoiceDocument.HeaderBillingIsConfirmed,
+			HeaderBillingConfStatus:   sdc.InvoiceDocument.HeaderBillingConfStatus,
+			TotalNetAmount:            v.TotalNetAmount,
+			TotalTaxAmount:            v.TotalTaxAmount,
+			TotalGrossAmount:          v.TotalGrossAmount,
+			TransactionCurrency:       v.TransactionCurrency,
+			Incoterms:                 v.Incoterms,
+			PaymentTerms:              v.PaymentTerms,
+			DueCalculationBaseDate:    v.DueCalculationBaseDate,
+			NetPaymentDays:            sdc.InvoiceDocument.NetPaymentDays,
+			PaymentMethod:             v.PaymentMethod,
+			HeaderPaymentBlockStatus:  sdc.InvoiceDocument.HeaderPaymentBlockStatus,
+			ExternalReferenceDocument: sdc.InvoiceDocument.ExternalReferenceDocument,
+			DocumentHeaderText:        sdc.InvoiceDocument.DocumentHeaderText,
+		})
 	}
 
-	return &headers, nil
+	return &header, nil
 }
 
 func ConvertToHeaderPartner(
 	sdc *api_input_reader.SDC,
 	psdc *api_processing_data_formatter.SDC,
 ) (*[]HeaderPartner, error) {
+	calculateInvoiceDocument := psdc.CalculateInvoiceDocument
 	headerOrdersHeaderPartner := psdc.HeaderOrdersHeaderPartner
-	calculateDeliveryDocument := psdc.CalculateDeliveryDocument
-	headerPartners := make([]HeaderPartner, 0, len(*headerOrdersHeaderPartner))
+	headerPartner := make([]HeaderPartner, 0, len(*headerOrdersHeaderPartner))
 
 	for _, v := range *headerOrdersHeaderPartner {
-		headerPartner := HeaderPartner{}
-		inputHeaderPartner := sdc.DeliveryDocument.HeaderPartner[0]
-		inputData, err := json.Marshal(inputHeaderPartner)
-		if err != nil {
-			return nil, err
-		}
-		err = json.Unmarshal(inputData, &headerPartner)
-		if err != nil {
-			return nil, err
-		}
-
-		data, err := json.Marshal(v)
-		if err != nil {
-			return nil, err
-		}
-		err = json.Unmarshal(data, &headerPartner)
-		if err != nil {
-			return nil, err
-		}
-
-		headerPartner.DeliveryDocument = calculateDeliveryDocument.DeliveryDocumentLatestNumber
-		headerPartners = append(headerPartners, headerPartner)
+		headerPartner = append(headerPartner, HeaderPartner{
+			InvoiceDocument:         calculateInvoiceDocument.InvoiceDocumentLatestNumber,
+			PartnerFunction:         v.PartnerFunction,
+			BusinessPartner:         v.BusinessPartner,
+			BusinessPartnerFullName: v.BusinessPartnerFullName,
+			BusinessPartnerName:     v.BusinessPartnerName,
+			Organization:            v.Organization,
+			Country:                 v.Country,
+			Language:                v.Language,
+			Currency:                v.Currency,
+			ExternalDocumentID:      v.ExternalDocumentID,
+			AddressID:               v.AddressID,
+		})
 	}
 
-	return &headerPartners, nil
-}
-
-func ConvertToHeaderPartnerPlant(
-	sdc *api_input_reader.SDC,
-	psdc *api_processing_data_formatter.SDC,
-) (*[]HeaderPartnerPlant, error) {
-	headerOrdersHeaderPartnerPlant := psdc.HeaderOrdersHeaderPartnerPlant
-	calculateDeliveryDocument := psdc.CalculateDeliveryDocument
-	headerPartnerPlants := make([]HeaderPartnerPlant, 0, len(*headerOrdersHeaderPartnerPlant))
-
-	for _, v := range *headerOrdersHeaderPartnerPlant {
-		headerPartnerPlant := HeaderPartnerPlant{}
-		inputHeaderPartnerPlant := sdc.DeliveryDocument.HeaderPartner[0].HeaderPartnerPlant[0]
-		inputData, err := json.Marshal(inputHeaderPartnerPlant)
-		if err != nil {
-			return nil, err
-		}
-		err = json.Unmarshal(inputData, &headerPartnerPlant)
-		if err != nil {
-			return nil, err
-		}
-
-		data, err := json.Marshal(v)
-		if err != nil {
-			return nil, err
-		}
-		err = json.Unmarshal(data, &headerPartnerPlant)
-		if err != nil {
-			return nil, err
-		}
-
-		headerPartnerPlant.DeliveryDocument = calculateDeliveryDocument.DeliveryDocumentLatestNumber
-		headerPartnerPlants = append(headerPartnerPlants, headerPartnerPlant)
-	}
-
-	return &headerPartnerPlants, nil
+	return &headerPartner, nil
 }

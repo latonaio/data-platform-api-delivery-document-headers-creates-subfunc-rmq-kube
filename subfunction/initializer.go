@@ -2,9 +2,9 @@ package subfunction
 
 import (
 	"context"
-	api_input_reader "data-platform-api-delivery-document-headers-creates-subfunc/API_Input_Reader"
-	dpfm_api_output_formatter "data-platform-api-delivery-document-headers-creates-subfunc/API_Output_Formatter"
-	api_processing_data_formatter "data-platform-api-delivery-document-headers-creates-subfunc/API_Processing_Data_Formatter"
+	api_input_reader "data-platform-api-invoice-document-headers-creates-subfunc-rmq/API_Input_Reader"
+	dpfm_api_output_formatter "data-platform-api-invoice-document-headers-creates-subfunc-rmq/API_Output_Formatter"
+	api_processing_data_formatter "data-platform-api-invoice-document-headers-creates-subfunc-rmq/API_Processing_Data_Formatter"
 
 	"sync"
 
@@ -53,8 +53,8 @@ func (f *SubFunction) OrderID(
 	rows, err := f.db.Query(
 		`SELECT OrderID, HeaderCompleteDeliveryIsDefined, OverallDeliveryStatus
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_orders_header_data
-		WHERE (OrderID, HeaderCompleteDeliveryIsDefined) = (?, ?)
-		AND OverallDeliveryStatus <> ?;`, dataKey.ReferenceDocument, dataKey.HeaderCompleteDeliveryIsDefined, dataKey.OverallDeliveryStatus,
+		WHERE HeaderCompleteDeliveryIsDefined = ?
+		AND OverallDeliveryStatus <> ?;`, dataKey.HeaderCompleteDeliveryIsDefined, dataKey.OverallDeliveryStatus,
 	)
 	if err != nil {
 		return nil, err
@@ -68,6 +68,74 @@ func (f *SubFunction) OrderID(
 	return data, err
 }
 
+func (f *SubFunction) DeliveryDocument(
+	sdc *api_input_reader.SDC,
+	psdc *api_processing_data_formatter.SDC,
+) (*[]api_processing_data_formatter.DeliveryDocument, error) {
+	dataKey, err := psdc.ConvertToDeliveryDocumentKey(sdc)
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := f.db.Query(
+		`SELECT DeliveryDocument, CompleteDeliveryIsDefined, OverallDeliveryStatus
+		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_delivery_document_header_data
+		WHERE CompleteDeliveryIsDefined = ?
+		AND OverallDeliveryStatus <> ?;`, dataKey.CompleteDeliveryIsDefined, dataKey.OverallDeliveryStatus,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := psdc.ConvertToDeliveryDocument(sdc, rows)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, err
+}
+
+func (f *SubFunction) CalculateInvoiceDocument(
+	sdc *api_input_reader.SDC,
+	psdc *api_processing_data_formatter.SDC,
+) (*api_processing_data_formatter.CalculateInvoiceDocument, error) {
+	metaData := psdc.MetaData
+	dataKey, err := psdc.ConvertToCalculateInvoiceDocumentKey()
+	if err != nil {
+		return nil, err
+	}
+
+	dataKey.ServiceLabel = metaData.ServiceLabel
+
+	rows, err := f.db.Query(
+		`SELECT ServiceLabel, FieldNameWithNumberRange, LatestNumber
+		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_number_range_latest_number_data
+		WHERE (ServiceLabel, FieldNameWithNumberRange) = (?, ?);`, dataKey.ServiceLabel, dataKey.FieldNameWithNumberRange,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	dataQueryGets, err := psdc.ConvertToCalculateInvoiceDocumentQueryGets(sdc, rows)
+	if err != nil {
+		return nil, err
+	}
+
+	calculateInvoiceDocument := CalculateInvoiceDocument(*dataQueryGets.InvoiceDocumentLatestNumber)
+
+	data, err := psdc.ConvertToCalculateInvoiceDocument(calculateInvoiceDocument)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, err
+}
+
+func CalculateInvoiceDocument(latestNumber int) *int {
+	res := latestNumber + 1
+	return &res
+}
+
 func (f *SubFunction) CreateSdc(
 	sdc *api_input_reader.SDC,
 	psdc *api_processing_data_formatter.SDC,
@@ -77,7 +145,7 @@ func (f *SubFunction) CreateSdc(
 	var e error
 
 	wg := sync.WaitGroup{}
-	wg.Add(2)
+	wg.Add(3)
 
 	psdc.MetaData, err = f.MetaData(sdc, psdc)
 	if err != nil {
@@ -86,29 +154,22 @@ func (f *SubFunction) CreateSdc(
 
 	go func(wg *sync.WaitGroup) {
 		defer wg.Done()
-		// II-0-1-1. OrderIDが未入出荷であり、かつ、OrderIDに入出荷伝票未登録残がある、明細の取得
+		// 1-3. [OrderID]が未請求であり、かつ、[OrderID]に入出荷伝票未登録残がある、明細の取得
 		psdc.OrderID, e = f.OrderID(sdc, psdc)
 		if e != nil {
 			err = e
 			return
 		}
 
-		// 1-1. オーダー参照レコード・値の取得（オーダーヘッダ）
+		// I-1-1. オーダ参照レコード・値の取得（オーダーヘッダ）
 		psdc.HeaderOrdersHeader, e = f.OrdersHeader(sdc, psdc)
 		if e != nil {
 			err = e
 			return
 		}
 
-		// 1-2. オーダー参照レコード・値の取得（オーダーヘッダパートナ）
+		// I-1-2. オーダー参照レコード・値の取得（オーダーヘッダパートナ）
 		psdc.HeaderOrdersHeaderPartner, e = f.OrdersHeaderPartner(sdc, psdc)
-		if e != nil {
-			err = e
-			return
-		}
-
-		// 1-4. オーダー参照レコード・値の取得（オーダーヘッダパートナプラント）
-		psdc.HeaderOrdersHeaderPartnerPlant, e = f.OrdersHeaderPartnerPlant(sdc, psdc)
 		if e != nil {
 			err = e
 			return
@@ -117,8 +178,32 @@ func (f *SubFunction) CreateSdc(
 
 	go func(wg *sync.WaitGroup) {
 		defer wg.Done()
-		// 1-7. DeliveryDocument
-		psdc.CalculateDeliveryDocument, e = f.CalculateDeliveryDocument(sdc, psdc)
+		// 2-3. [Delivery Document]が未請求であり、かつ、[Delivery Document]に入出荷伝票未登録残がある、明細の取得
+		psdc.DeliveryDocument, e = f.DeliveryDocument(sdc, psdc)
+		if e != nil {
+			err = e
+			return
+		}
+
+		//I-2-1. 入出荷伝票参照レコード・値の取得（入出荷伝票ヘッダ）
+		psdc.HeaderDeliveryDocumentHeader, e = f.DeliveryDocumentHeader(sdc, psdc)
+		if e != nil {
+			err = e
+			return
+		}
+
+		// I-1-2. オーダー参照レコード・値の取得（オーダーヘッダパートナ）
+		psdc.HeaderDeliveryDocumentHeaderPartner, e = f.DeliveryDocumentHeaderPartner(sdc, psdc)
+		if e != nil {
+			err = e
+			return
+		}
+	}(&wg)
+
+	go func(wg *sync.WaitGroup) {
+		defer wg.Done()
+		// 1-1 InvoiceDocument
+		psdc.CalculateInvoiceDocument, e = f.CalculateInvoiceDocument(sdc, psdc)
 		if e != nil {
 			err = e
 			return
@@ -130,7 +215,7 @@ func (f *SubFunction) CreateSdc(
 		return err
 	}
 
-	osdc, err = f.SetValue(sdc, osdc, psdc)
+	osdc, err = f.SetValue(sdc, psdc, osdc)
 	if err != nil {
 		return err
 	}

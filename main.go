@@ -2,16 +2,15 @@ package main
 
 import (
 	"context"
-	api_input_reader "data-platform-api-delivery-document-headers-creates-subfunc/API_Input_Reader"
-	dpfm_api_output_formatter "data-platform-api-delivery-document-headers-creates-subfunc/API_Output_Formatter"
-	api_processing_data_formatter "data-platform-api-delivery-document-headers-creates-subfunc/API_Processing_Data_Formatter"
-	"data-platform-api-delivery-document-headers-creates-subfunc/config"
-
-	"data-platform-api-delivery-document-headers-creates-subfunc/subfunction"
-
-	database "github.com/latonaio/golang-mysql-network-connector"
+	api_input_reader "data-platform-api-invoice-document-headers-creates-subfunc-rmq/API_Input_Reader"
+	dpfm_api_output_formatter "data-platform-api-invoice-document-headers-creates-subfunc-rmq/API_Output_Formatter"
+	api_processing_data_formatter "data-platform-api-invoice-document-headers-creates-subfunc-rmq/API_Processing_Data_Formatter"
+	"data-platform-api-invoice-document-headers-creates-subfunc-rmq/config"
+	"data-platform-api-invoice-document-headers-creates-subfunc-rmq/subfunction"
 
 	"fmt"
+
+	database "github.com/latonaio/golang-mysql-network-connector"
 
 	"github.com/latonaio/golang-logging-library-for-data-platform/logger"
 	rabbitmq "github.com/latonaio/rabbitmq-golang-client-for-data-platform"
@@ -26,7 +25,6 @@ func main() {
 		l.Error(err)
 		return
 	}
-	defer db.Close()
 
 	rmq, err := rabbitmq.NewRabbitmqClient(c.RMQ.URL(), c.RMQ.QueueFrom(), "", c.RMQ.QueueTo(), -1)
 	if err != nil {
