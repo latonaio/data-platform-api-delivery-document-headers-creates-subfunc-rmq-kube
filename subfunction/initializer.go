@@ -73,19 +73,13 @@ func (f *SubFunction) CreateSdc(
 	psdc *api_processing_data_formatter.SDC,
 	osdc *dpfm_api_output_formatter.SDC,
 ) error {
-	var metaData *api_processing_data_formatter.MetaData
-	var orderID *[]api_processing_data_formatter.OrderID
-	var headerOrdersHeader *[]api_processing_data_formatter.HeaderOrdersHeader
-	var headerOrdersHeaderPartner *[]api_processing_data_formatter.HeaderOrdersHeaderPartner
-	var headerOrdersHeaderPartnerPlant *[]api_processing_data_formatter.HeaderOrdersHeaderPartnerPlant
-	var calculateDeliveryDocument *api_processing_data_formatter.CalculateDeliveryDocument
 	var err error
 	var e error
 
 	wg := sync.WaitGroup{}
 	wg.Add(2)
 
-	metaData, err = f.MetaData(sdc, psdc)
+	psdc.MetaData, err = f.MetaData(sdc, psdc)
 	if err != nil {
 		return err
 	}
@@ -93,28 +87,28 @@ func (f *SubFunction) CreateSdc(
 	go func(wg *sync.WaitGroup) {
 		defer wg.Done()
 		// II-0-1-1. OrderIDが未入出荷であり、かつ、OrderIDに入出荷伝票未登録残がある、明細の取得
-		orderID, e = f.OrderID(sdc, psdc)
+		psdc.OrderID, e = f.OrderID(sdc, psdc)
 		if e != nil {
 			err = e
 			return
 		}
 
 		// 1-1. オーダー参照レコード・値の取得（オーダーヘッダ）
-		headerOrdersHeader, e = f.OrdersHeader(orderID, sdc, psdc)
+		psdc.HeaderOrdersHeader, e = f.OrdersHeader(sdc, psdc)
 		if e != nil {
 			err = e
 			return
 		}
 
 		// 1-2. オーダー参照レコード・値の取得（オーダーヘッダパートナ）
-		headerOrdersHeaderPartner, e = f.OrdersHeaderPartner(orderID, sdc, psdc)
+		psdc.HeaderOrdersHeaderPartner, e = f.OrdersHeaderPartner(sdc, psdc)
 		if e != nil {
 			err = e
 			return
 		}
 
 		// 1-4. オーダー参照レコード・値の取得（オーダーヘッダパートナプラント）
-		headerOrdersHeaderPartnerPlant, e = f.OrdersHeaderPartnerPlant(orderID, sdc, psdc)
+		psdc.HeaderOrdersHeaderPartnerPlant, e = f.OrdersHeaderPartnerPlant(sdc, psdc)
 		if e != nil {
 			err = e
 			return
@@ -124,7 +118,7 @@ func (f *SubFunction) CreateSdc(
 	go func(wg *sync.WaitGroup) {
 		defer wg.Done()
 		// 1-7. DeliveryDocument
-		calculateDeliveryDocument, e = f.CalculateDeliveryDocument(metaData, sdc, psdc)
+		psdc.CalculateDeliveryDocument, e = f.CalculateDeliveryDocument(sdc, psdc)
 		if e != nil {
 			err = e
 			return
@@ -136,7 +130,7 @@ func (f *SubFunction) CreateSdc(
 		return err
 	}
 
-	osdc, err = f.SetValue(sdc, osdc, orderID, headerOrdersHeader, headerOrdersHeaderPartner, headerOrdersHeaderPartnerPlant, calculateDeliveryDocument)
+	osdc, err = f.SetValue(sdc, osdc, psdc)
 	if err != nil {
 		return err
 	}

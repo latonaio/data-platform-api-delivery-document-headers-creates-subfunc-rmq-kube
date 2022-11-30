@@ -3,15 +3,17 @@ package dpfm_api_output_formatter
 import (
 	api_input_reader "data-platform-api-delivery-document-headers-creates-subfunc/API_Input_Reader"
 	api_processing_data_formatter "data-platform-api-delivery-document-headers-creates-subfunc/API_Processing_Data_Formatter"
+	"encoding/json"
 )
 
 func ConvertToHeader(
 	sdc *api_input_reader.SDC,
-	orderID *[]api_processing_data_formatter.OrderID,
-	headerOrdersHeader *[]api_processing_data_formatter.HeaderOrdersHeader,
-	calculateDeliveryDocument *api_processing_data_formatter.CalculateDeliveryDocument,
+	psdc *api_processing_data_formatter.SDC,
 ) (*[]Header, error) {
-	header := make([]Header, 0, len(*headerOrdersHeader))
+	orderID := psdc.OrderID
+	headerOrdersHeader := psdc.HeaderOrdersHeader
+	calculateDeliveryDocument := psdc.CalculateDeliveryDocument
+	headers := make([]Header, 0, len(*headerOrdersHeader))
 
 	for _, v := range *headerOrdersHeader {
 		orderId := v.OrderID
@@ -19,57 +21,103 @@ func ConvertToHeader(
 			if *orderID.OrderID != *orderId {
 				continue
 			}
+			header := Header{}
+			inputHeader := sdc.DeliveryDocument
+			inputData, err := json.Marshal(inputHeader)
+			if err != nil {
+				return nil, err
+			}
+			err = json.Unmarshal(inputData, &header)
+			if err != nil {
+				return nil, err
+			}
 
-			header = append(header, Header{
-				DeliveryDocument:              calculateDeliveryDocument.DeliveryDocumentLatestNumber,
-				Buyer:                         v.Buyer,
-				Seller:                        v.Seller,
-				ReferenceDocument:             orderID.ReferenceDocument,
-				ReferenceDocumentItem:         sdc.DeliveryDocument.ReferenceDocumentItem,
-				OrderID:                       v.OrderID,
-				OrderItem:                     sdc.DeliveryDocument.OrderItem,
-				ContractType:                  v.ContractType,
-				OrderValidityStartDate:        v.OrderValidityStartDate,
-				OrderValidityEndDate:          v.OrderValidityEndDate,
-				InvoiceScheduleStartDate:      v.InvoiceScheduleStartDate,
-				InvoiceScheduleEndDate:        v.InvoiceScheduleEndDate,
-				IssuingPlantTimeZone:          sdc.DeliveryDocument.IssuingPlantTimeZone,
-				ReceivingPlantTimeZone:        sdc.DeliveryDocument.ReceivingPlantTimeZone,
-				DocumentDate:                  sdc.DeliveryDocument.DocumentDate,
-				PlannedGoodsIssueDate:         sdc.DeliveryDocument.PlannedGoodsIssueDate,
-				PlannedGoodsIssueTime:         sdc.DeliveryDocument.PlannedGoodsIssueTime,
-				PlannedGoodsReceiptDate:       sdc.DeliveryDocument.PlannedGoodsReceiptDate,
-				PlannedGoodsReceiptTime:       sdc.DeliveryDocument.PlannedGoodsReceiptTime,
-				BillingDocumentDate:           sdc.DeliveryDocument.BillingDocumentDate,
-				CompleteDeliveryIsDefined:     sdc.DeliveryDocument.CompleteDeliveryIsDefined,
-				OverallDeliveryStatus:         sdc.DeliveryDocument.OverallDeliveryStatus,
-				CreationDate:                  sdc.DeliveryDocument.CreationDate,
-				CreationTime:                  sdc.DeliveryDocument.CreationTime,
-				IssuingBlockReason:            sdc.DeliveryDocument.IssuingBlockReason,
-				ReceivingBlockReason:          sdc.DeliveryDocument.ReceivingBlockReason,
-				GoodsIssueOrReceiptSlipNumber: sdc.DeliveryDocument.GoodsIssueOrReceiptSlipNumber,
-				HeaderBillingStatus:           sdc.DeliveryDocument.HeaderBillingStatus,
-				HeaderBillingConfStatus:       sdc.DeliveryDocument.HeaderBillingConfStatus,
-				HeaderBillingBlockReason:      sdc.DeliveryDocument.HeaderBillingBlockReason,
-				HeaderGrossWeight:             sdc.DeliveryDocument.HeaderGrossWeight,
-				HeaderNetWeight:               sdc.DeliveryDocument.HeaderNetWeight,
-				HeaderVolume:                  sdc.DeliveryDocument.HeaderVolume,
-				HeaderVolumeUnit:              sdc.DeliveryDocument.HeaderVolumeUnit,
-				HeaderWeightUnit:              sdc.DeliveryDocument.HeaderWeightUnit,
-				Incoterms:                     v.Incoterms,
-				IsExportImportDelivery:        v.IsExportImportDelivery,
-				LastChangeDate:                sdc.DeliveryDocument.LastChangeDate,
-				IssuingPlantBusinessPartner:   sdc.DeliveryDocument.IssuingPlantBusinessPartner,
-				IssuingPlant:                  sdc.DeliveryDocument.IssuingPlant,
-				ReceivingPlant:                sdc.DeliveryDocument.ReceivingPlant,
-				ReceivingPlantBusinessPartner: sdc.DeliveryDocument.ReceivingPlantBusinessPartner,
-				DeliverToParty:                sdc.DeliveryDocument.DeliverToParty,
-				DeliverFromParty:              sdc.DeliveryDocument.DeliverFromParty,
-				TransactionCurrency:           v.TransactionCurrency,
-				OverallDelivReltdBillgStatus:  sdc.DeliveryDocument.OverallDelivReltdBillgStatus,
-			})
+			data, err := json.Marshal(v)
+			if err != nil {
+				return nil, err
+			}
+			err = json.Unmarshal(data, &header)
+			if err != nil {
+				return nil, err
+			}
+
+			header.DeliveryDocument = calculateDeliveryDocument.DeliveryDocumentLatestNumber
+			header.ReferenceDocument = orderID.ReferenceDocument
+			headers = append(headers, header)
 		}
 	}
 
-	return &header, nil
+	return &headers, nil
+}
+
+func ConvertToHeaderPartner(
+	sdc *api_input_reader.SDC,
+	psdc *api_processing_data_formatter.SDC,
+) (*[]HeaderPartner, error) {
+	headerOrdersHeaderPartner := psdc.HeaderOrdersHeaderPartner
+	calculateDeliveryDocument := psdc.CalculateDeliveryDocument
+	headerPartners := make([]HeaderPartner, 0, len(*headerOrdersHeaderPartner))
+
+	for _, v := range *headerOrdersHeaderPartner {
+		headerPartner := HeaderPartner{}
+		inputHeaderPartner := sdc.DeliveryDocument.HeaderPartner[0]
+		inputData, err := json.Marshal(inputHeaderPartner)
+		if err != nil {
+			return nil, err
+		}
+		err = json.Unmarshal(inputData, &headerPartner)
+		if err != nil {
+			return nil, err
+		}
+
+		data, err := json.Marshal(v)
+		if err != nil {
+			return nil, err
+		}
+		err = json.Unmarshal(data, &headerPartner)
+		if err != nil {
+			return nil, err
+		}
+
+		headerPartner.DeliveryDocument = calculateDeliveryDocument.DeliveryDocumentLatestNumber
+		headerPartners = append(headerPartners, headerPartner)
+	}
+
+	return &headerPartners, nil
+}
+
+func ConvertToHeaderPartnerPlant(
+	sdc *api_input_reader.SDC,
+	psdc *api_processing_data_formatter.SDC,
+) (*[]HeaderPartnerPlant, error) {
+	headerOrdersHeaderPartnerPlant := psdc.HeaderOrdersHeaderPartnerPlant
+	calculateDeliveryDocument := psdc.CalculateDeliveryDocument
+	headerPartnerPlants := make([]HeaderPartnerPlant, 0, len(*headerOrdersHeaderPartnerPlant))
+
+	for _, v := range *headerOrdersHeaderPartnerPlant {
+		headerPartnerPlant := HeaderPartnerPlant{}
+		inputHeaderPartnerPlant := sdc.DeliveryDocument.HeaderPartner[0].HeaderPartnerPlant[0]
+		inputData, err := json.Marshal(inputHeaderPartnerPlant)
+		if err != nil {
+			return nil, err
+		}
+		err = json.Unmarshal(inputData, &headerPartnerPlant)
+		if err != nil {
+			return nil, err
+		}
+
+		data, err := json.Marshal(v)
+		if err != nil {
+			return nil, err
+		}
+		err = json.Unmarshal(data, &headerPartnerPlant)
+		if err != nil {
+			return nil, err
+		}
+
+		headerPartnerPlant.DeliveryDocument = calculateDeliveryDocument.DeliveryDocumentLatestNumber
+		headerPartnerPlants = append(headerPartnerPlants, headerPartnerPlant)
+	}
+
+	return &headerPartnerPlants, nil
 }

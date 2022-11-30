@@ -54,11 +54,12 @@ type EC_MC struct {
 }
 
 type SDC struct {
-	MetaData                  *MetaData                  `json:"MetaData"`
-	OrderIDKey                *OrderIDKey                `json:"OrderIDKey`
-	OrderID                   *OrderID                   `json:"OrderID`
-	HeaderOrdersHeader        *HeaderOrdersHeader        `json:"HeaderOrdersHeader"`
-	HeaderOrdersHeaderPartner *HeaderOrdersHeaderPartner `json"HeaderOrdersHeaderPartner"`
+	MetaData                       *MetaData                         `json:"MetaData"`
+	OrderID                        *[]OrderID                        `json:"OrderID`
+	CalculateDeliveryDocument      *CalculateDeliveryDocument        `json:"CalculateDeliveryDocument`
+	HeaderOrdersHeader             *[]HeaderOrdersHeader             `json:"HeaderOrdersHeader"`
+	HeaderOrdersHeaderPartner      *[]HeaderOrdersHeaderPartner      `json"HeaderOrdersHeaderPartner"`
+	HeaderOrdersHeaderPartnerPlant *[]HeaderOrdersHeaderPartnerPlant `json"HeaderOrdersHeaderPartnerPlant"`
 }
 
 type MetaData struct {
@@ -77,6 +78,22 @@ type OrderID struct {
 	OrderID                         *int   `json:"OrderID`
 	HeaderCompleteDeliveryIsDefined *bool  `json:"HeaderCompleteDeliveryIsDefined"`
 	OverallDeliveryStatus           string `json:"OverallDeliveryStatus"`
+}
+
+type CalculateDeliveryDocumentKey struct {
+	ServiceLabel             string `json:"service_label"`
+	FieldNameWithNumberRange string
+}
+
+type CalculateDeliveryDocumentQueryGets struct {
+	ServiceLabel                 string `json:"service_label"`
+	FieldNameWithNumberRange     string
+	DeliveryDocumentLatestNumber *int
+}
+
+type CalculateDeliveryDocument struct {
+	DeliveryDocumentLatestNumber *int
+	DeliveryDocument             *int `json:"DeliveryDocument"`
 }
 
 type HeaderOrdersHeader struct {
@@ -116,20 +133,4 @@ type HeaderOrdersHeaderPartnerPlant struct {
 	PartnerFunction  string `json:"PartnerFunction"`
 	BusinessPartner  *int   `json:"BusinessPartner"`
 	Plant            string `json:"Plant"`
-}
-
-type CalculateDeliveryDocumentKey struct {
-	ServiceLabel             string `json:"service_label"`
-	FieldNameWithNumberRange string
-}
-
-type CalculateDeliveryDocumentQueryGets struct {
-	ServiceLabel                 string `json:"service_label"`
-	FieldNameWithNumberRange     string
-	DeliveryDocumentLatestNumber *int
-}
-
-type CalculateDeliveryDocument struct {
-	DeliveryDocumentLatestNumber *int
-	DeliveryDocument             *int `json:"DeliveryDocument"`
 }

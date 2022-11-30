@@ -62,10 +62,7 @@ func (*FileReader) ReadSDC(path string) SDC {
 // }
 
 func ConvertToSDC() SDC {
-	sdc := SDC{
-		OrderIDKey: &OrderIDKey{},
-		OrderID:    &OrderID{},
-	}
+	sdc := SDC{}
 
 	return sdc
 }

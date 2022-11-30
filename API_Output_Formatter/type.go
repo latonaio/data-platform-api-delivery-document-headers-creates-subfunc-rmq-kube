@@ -27,6 +27,7 @@ type Message struct {
 	Header             []Header             `json:"Header"`
 	HeaderPartner      []HeaderPartner      `json:"HeaderPartner"`
 	HeaderPartnerPlant []HeaderPartnerPlant `json:"HeaderPartnerPlant`
+	Item               []Item               `json:"Item`
 }
 
 type Header struct {

@@ -10,15 +10,15 @@
   "message": {
     "Header": [
       {
-        "DeliveryDocument": 80000006,
+        "DeliveryDocument": 80000028,
         "Buyer": 101,
         "Seller": 201,
-        "ReferenceDocument": 100,
+        "ReferenceDocument": 116,
         "ReferenceDocumentItem": null,
-        "OrderID": 100,
+        "OrderID": 116,
         "OrderItem": null,
         "ContractType": null,
-        "OrderVaridityStartDate": null,
+        "OrderVaridityStartDate": "",
         "OrderValidityEndDate": null,
         "InvoiceScheduleStartDate": null,
         "InvoiceScheduleEndDate": null,
@@ -58,8 +58,68 @@
         "OverallDelivReltdBillgStatus": ""
       }
     ],
-    "HeaderPartner": null,
-    "HeaderPartnerPlant": null
+    "HeaderPartner": [
+      {
+        "DeliveryDocument": 80000028,
+        "PartnerFunction": "BUYER",
+        "BusinessPartner": 101,
+        "BusinessPartnerFullName": "株式会社ローソン本社",
+        "BusinessPartnerName": "ローソン本社",
+        "Organization": null,
+        "Country": "JP",
+        "Language": "JA",
+        "Currency": "JPY",
+        "ExternalDocumentID": null,
+        "AddressID": 100000
+      },
+      {
+        "DeliveryDocument": 80000028,
+        "PartnerFunction": "DELIVERTO",
+        "BusinessPartner": 102,
+        "BusinessPartnerFullName": "株式会社ローソン虎ノ門店",
+        "BusinessPartnerName": "ローソン虎ノ門店",
+        "Organization": null,
+        "Country": "JP",
+        "Language": "JA",
+        "Currency": "JPY",
+        "ExternalDocumentID": null,
+        "AddressID": 200000
+      },
+      {
+        "DeliveryDocument": 80000028,
+        "PartnerFunction": "SELLER",
+        "BusinessPartner": 201,
+        "BusinessPartnerFullName": "山崎製パン販売株式会社",
+        "BusinessPartnerName": "山崎パン販売",
+        "Organization": null,
+        "Country": "JP",
+        "Language": "JA",
+        "Currency": "JPY",
+        "ExternalDocumentID": null,
+        "AddressID": 300000
+      }
+    ],
+    "HeaderPartnerPlant": [
+      {
+        "DeliveryDocument": 80000028,
+        "PartnerFunction": "BUYER",
+        "BusinessPartner": 101,
+        "Plant": "AB01"
+      },
+      {
+        "DeliveryDocument": 80000028,
+        "PartnerFunction": "DELIVERTO",
+        "BusinessPartner": 102,
+        "Plant": "AB02"
+      },
+      {
+        "DeliveryDocument": 80000028,
+        "PartnerFunction": "SELLER",
+        "BusinessPartner": 201,
+        "Plant": "TE01"
+      }
+    ],
+    "Item": null
   },
   "api_schema": "DPFMDeliveryDocumentCreates",
   "accepter": [

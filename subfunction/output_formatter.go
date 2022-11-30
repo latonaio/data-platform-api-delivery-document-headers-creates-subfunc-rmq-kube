@@ -10,23 +10,35 @@ import (
 func (f *SubFunction) SetValue(
 	sdc *api_input_reader.SDC,
 	osdc *dpfm_api_output_formatter.SDC,
-	orderID *[]api_processing_data_formatter.OrderID,
-	headerOrdersHeader *[]api_processing_data_formatter.HeaderOrdersHeader,
-	headerOrdersHeaderPartner *[]api_processing_data_formatter.HeaderOrdersHeaderPartner,
-	headerOrdersHeaderPartnerPlant *[]api_processing_data_formatter.HeaderOrdersHeaderPartnerPlant,
-	calculateDeliveryDocument *api_processing_data_formatter.CalculateDeliveryDocument,
+	psdc *api_processing_data_formatter.SDC,
 ) (*dpfm_api_output_formatter.SDC, error) {
 	var outHeader *[]dpfm_api_output_formatter.Header
+	var outHeaderPartner *[]dpfm_api_output_formatter.HeaderPartner
+	var outHeaderPartnerPlant *[]dpfm_api_output_formatter.HeaderPartnerPlant
 	var err error
 
-	outHeader, err = dpfm_api_output_formatter.ConvertToHeader(sdc, orderID, headerOrdersHeader, calculateDeliveryDocument)
+	outHeader, err = dpfm_api_output_formatter.ConvertToHeader(sdc, psdc)
+	if err != nil {
+		fmt.Printf("err = %+v \n", err)
+		return nil, err
+	}
+
+	outHeaderPartner, err = dpfm_api_output_formatter.ConvertToHeaderPartner(sdc, psdc)
+	if err != nil {
+		fmt.Printf("err = %+v \n", err)
+		return nil, err
+	}
+
+	outHeaderPartnerPlant, err = dpfm_api_output_formatter.ConvertToHeaderPartnerPlant(sdc, psdc)
 	if err != nil {
 		fmt.Printf("err = %+v \n", err)
 		return nil, err
 	}
 
 	osdc.Message = dpfm_api_output_formatter.Message{
-		Header: *outHeader,
+		Header:             *outHeader,
+		HeaderPartner:      *outHeaderPartner,
+		HeaderPartnerPlant: *outHeaderPartnerPlant,
 	}
 
 	return osdc, nil

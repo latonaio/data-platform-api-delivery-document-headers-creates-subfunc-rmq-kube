@@ -88,6 +88,78 @@ func (psdc *SDC) ConvertToOrderID(
 	return &orderID, nil
 }
 
+func (psdc *SDC) ConvertToCalculateDeliveryDocumentKey() (*CalculateDeliveryDocumentKey, error) {
+	pm := &requests.CalculateDeliveryDocumentKey{
+		ServiceLabel:             "",
+		FieldNameWithNumberRange: "DeliveryDocument",
+	}
+	data := pm
+
+	calculateDeliveryDocumentKey := CalculateDeliveryDocumentKey{
+		ServiceLabel:             data.ServiceLabel,
+		FieldNameWithNumberRange: data.FieldNameWithNumberRange,
+	}
+
+	return &calculateDeliveryDocumentKey, nil
+}
+
+func (psdc *SDC) ConvertToCalculateDeliveryDocumentQueryGets(
+	sdc *api_input_reader.SDC,
+	rows *sql.Rows,
+) (*CalculateDeliveryDocumentQueryGets, error) {
+	pm := &requests.CalculateDeliveryDocumentQueryGets{
+		ServiceLabel:                 "",
+		FieldNameWithNumberRange:     "",
+		DeliveryDocumentLatestNumber: nil,
+	}
+
+	for i := 0; true; i++ {
+		if !rows.Next() {
+			if i == 0 {
+				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
+			} else {
+				break
+			}
+		}
+		err := rows.Scan(
+			&pm.ServiceLabel,
+			&pm.FieldNameWithNumberRange,
+			&pm.DeliveryDocumentLatestNumber,
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+	data := pm
+
+	calculateDeliveryDocumentQueryGets := CalculateDeliveryDocumentQueryGets{
+		ServiceLabel:                 data.ServiceLabel,
+		FieldNameWithNumberRange:     data.FieldNameWithNumberRange,
+		DeliveryDocumentLatestNumber: data.DeliveryDocumentLatestNumber,
+	}
+
+	return &calculateDeliveryDocumentQueryGets, nil
+}
+
+func (psdc *SDC) ConvertToCalculateDeliveryDocument(
+	deliveryDocumentLatestNumber *int,
+) (*CalculateDeliveryDocument, error) {
+	pm := &requests.CalculateDeliveryDocument{
+		DeliveryDocumentLatestNumber: nil,
+		DeliveryDocument:             nil,
+	}
+
+	pm.DeliveryDocumentLatestNumber = deliveryDocumentLatestNumber
+	data := pm
+
+	calculateDeliveryDocument := CalculateDeliveryDocument{
+		DeliveryDocumentLatestNumber: data.DeliveryDocumentLatestNumber,
+		DeliveryDocument:             data.DeliveryDocument,
+	}
+
+	return &calculateDeliveryDocument, nil
+}
+
 // Header
 func (psdc *SDC) ConvertToHeaderOrdersHeader(
 	sdc *api_input_reader.SDC,
@@ -266,76 +338,4 @@ func (psdc *SDC) ConvertToHeaderOrdersHeaderPartnerPlant(
 	}
 
 	return &headerOrdersHeaderPartnerPlant, nil
-}
-
-func (psdc *SDC) ConvertToCalculateDeliveryDocumentKey() (*CalculateDeliveryDocumentKey, error) {
-	pm := &requests.CalculateDeliveryDocumentKey{
-		ServiceLabel:             "",
-		FieldNameWithNumberRange: "DeliveryDocument",
-	}
-	data := pm
-
-	calculateDeliveryDocumentKey := CalculateDeliveryDocumentKey{
-		ServiceLabel:             data.ServiceLabel,
-		FieldNameWithNumberRange: data.FieldNameWithNumberRange,
-	}
-
-	return &calculateDeliveryDocumentKey, nil
-}
-
-func (psdc *SDC) ConvertToCalculateDeliveryDocumentQueryGets(
-	sdc *api_input_reader.SDC,
-	rows *sql.Rows,
-) (*CalculateDeliveryDocumentQueryGets, error) {
-	pm := &requests.CalculateDeliveryDocumentQueryGets{
-		ServiceLabel:                 "",
-		FieldNameWithNumberRange:     "",
-		DeliveryDocumentLatestNumber: nil,
-	}
-
-	for i := 0; true; i++ {
-		if !rows.Next() {
-			if i == 0 {
-				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
-			} else {
-				break
-			}
-		}
-		err := rows.Scan(
-			&pm.ServiceLabel,
-			&pm.FieldNameWithNumberRange,
-			&pm.DeliveryDocumentLatestNumber,
-		)
-		if err != nil {
-			return nil, err
-		}
-	}
-	data := pm
-
-	calculateDeliveryDocumentQueryGets := CalculateDeliveryDocumentQueryGets{
-		ServiceLabel:                 data.ServiceLabel,
-		FieldNameWithNumberRange:     data.FieldNameWithNumberRange,
-		DeliveryDocumentLatestNumber: data.DeliveryDocumentLatestNumber,
-	}
-
-	return &calculateDeliveryDocumentQueryGets, nil
-}
-
-func (psdc *SDC) ConvertToCalculateDeliveryDocument(
-	deliveryDocumentLatestNumber *int,
-) (*CalculateDeliveryDocument, error) {
-	pm := &requests.CalculateDeliveryDocument{
-		DeliveryDocumentLatestNumber: nil,
-		DeliveryDocument:             nil,
-	}
-
-	pm.DeliveryDocumentLatestNumber = deliveryDocumentLatestNumber
-	data := pm
-
-	calculateDeliveryDocument := CalculateDeliveryDocument{
-		DeliveryDocumentLatestNumber: data.DeliveryDocumentLatestNumber,
-		DeliveryDocument:             data.DeliveryDocument,
-	}
-
-	return &calculateDeliveryDocument, nil
 }

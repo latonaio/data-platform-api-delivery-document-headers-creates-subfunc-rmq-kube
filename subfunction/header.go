@@ -7,11 +7,12 @@ import (
 )
 
 func (f *SubFunction) OrdersHeader(
-	orderID *[]api_processing_data_formatter.OrderID,
 	sdc *api_input_reader.SDC,
 	psdc *api_processing_data_formatter.SDC,
 ) (*[]api_processing_data_formatter.HeaderOrdersHeader, error) {
 	var args []interface{}
+
+	orderID := psdc.OrderID
 	repeat := strings.Repeat("?,", len(*orderID)-1) + "?"
 	for _, tag := range *orderID {
 		args = append(args, tag.OrderID)
@@ -34,67 +35,11 @@ func (f *SubFunction) OrdersHeader(
 	return data, err
 }
 
-func (f *SubFunction) OrdersHeaderPartner(
-	orderID *[]api_processing_data_formatter.OrderID,
-	sdc *api_input_reader.SDC,
-	psdc *api_processing_data_formatter.SDC,
-) (*[]api_processing_data_formatter.HeaderOrdersHeaderPartner, error) {
-	var args []interface{}
-	repeat := strings.Repeat("?,", len(*orderID)-1) + "?"
-	for _, tag := range *orderID {
-		args = append(args, tag.OrderID)
-	}
-
-	rows, err := f.db.Query(
-		`SELECT OrderID, PartnerFunction, BusinessPartner, BusinessPartnerFullName, BusinessPartnerName, Organization, Country, Language, Currency, ExternalDocumentID, AddressID
-		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_orders_header_partner_data
-		WHERE OrderID IN ( `+repeat+` );`, args...,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	data, err := psdc.ConvertToHeaderOrdersHeaderPartner(sdc, rows)
-	if err != nil {
-		return nil, err
-	}
-
-	return data, err
-}
-
-func (f *SubFunction) OrdersHeaderPartnerPlant(
-	orderID *[]api_processing_data_formatter.OrderID,
-	sdc *api_input_reader.SDC,
-	psdc *api_processing_data_formatter.SDC,
-) (*[]api_processing_data_formatter.HeaderOrdersHeaderPartnerPlant, error) {
-	var args []interface{}
-	repeat := strings.Repeat("?,", len(*orderID)-1) + "?"
-	for _, tag := range *orderID {
-		args = append(args, tag.OrderID)
-	}
-
-	rows, err := f.db.Query(
-		`SELECT OrderID, PartnerFunction, BusinessPartner, Plant
-		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_orders_header_partner_plant_data
-		WHERE OrderID IN ( `+repeat+` );`, args...,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	data, err := psdc.ConvertToHeaderOrdersHeaderPartnerPlant(sdc, rows)
-	if err != nil {
-		return nil, err
-	}
-
-	return data, err
-}
-
 func (f *SubFunction) CalculateDeliveryDocument(
-	metaData *api_processing_data_formatter.MetaData,
 	sdc *api_input_reader.SDC,
 	psdc *api_processing_data_formatter.SDC,
 ) (*api_processing_data_formatter.CalculateDeliveryDocument, error) {
+	metaData := psdc.MetaData
 	dataKey, err := psdc.ConvertToCalculateDeliveryDocumentKey()
 	if err != nil {
 		return nil, err
