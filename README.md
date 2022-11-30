@@ -13,7 +13,7 @@ data-platform-api-invoice-document-headers-creates-subfunc-rmq-kube の 対象AP
 ## 本レポジトリ が 対応する データ
 data-platform-api-invoice-document-headers-creates-subfunc-rmq-kube が対応する データ は、次のものです。
 
-* InvoiceDocumentPartner（請求 - ヘッダデータ）
+* InvoiceDocument（請求 - ヘッダデータ）
 * InvoiceDocumentHeaderPartner（請求 - ヘッダ取引先データ）
 * InvoiceDocumentHeaderPartnerContact（請求 - ヘッダ取引先コンタクトデータ）
 
