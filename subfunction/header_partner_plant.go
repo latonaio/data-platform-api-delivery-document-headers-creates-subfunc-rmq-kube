@@ -6,10 +6,10 @@ import (
 	"strings"
 )
 
-func (f *SubFunction) OrdersHeaderPartner(
+func (f *SubFunction) OrdersHeaderPartnerPlant(
 	sdc *api_input_reader.SDC,
 	psdc *api_processing_data_formatter.SDC,
-) (*[]api_processing_data_formatter.HeaderOrdersHeaderPartner, error) {
+) (*[]api_processing_data_formatter.HeaderOrdersHeaderPartnerPlant, error) {
 	var args []interface{}
 
 	orderID := psdc.OrderID
@@ -19,15 +19,15 @@ func (f *SubFunction) OrdersHeaderPartner(
 	}
 
 	rows, err := f.db.Query(
-		`SELECT OrderID, PartnerFunction, BusinessPartner, BusinessPartnerFullName, BusinessPartnerName, Organization, Country, Language, Currency, ExternalDocumentID, AddressID
-		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_orders_header_partner_data
+		`SELECT OrderID, PartnerFunction, BusinessPartner, Plant
+		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_orders_header_partner_plant_data
 		WHERE OrderID IN ( `+repeat+` );`, args...,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	data, err := psdc.ConvertToHeaderOrdersHeaderPartner(sdc, rows)
+	data, err := psdc.ConvertToHeaderOrdersHeaderPartnerPlant(sdc, rows)
 	if err != nil {
 		return nil, err
 	}

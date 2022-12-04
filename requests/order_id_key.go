@@ -1,8 +1,7 @@
 package requests
 
-type OrderID struct {
-	InvoiceDocument                 *int   `json:"InvoiceDocument"`
-	OrderID                         *int   `json:"OrderID`
+type OrderIDKey struct {
+	ReferenceDocument               *int   `json:"ReferenceDocument"`
 	HeaderCompleteDeliveryIsDefined *bool  `json:"HeaderCompleteDeliveryIsDefined"`
 	OverallDeliveryStatus           string `json:"OverallDeliveryStatus"`
 }
