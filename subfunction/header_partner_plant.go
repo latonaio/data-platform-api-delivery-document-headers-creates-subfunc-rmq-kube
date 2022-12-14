@@ -12,9 +12,9 @@ func (f *SubFunction) OrdersHeaderPartnerPlant(
 ) (*[]api_processing_data_formatter.HeaderOrdersHeaderPartnerPlant, error) {
 	var args []interface{}
 
-	orderID := psdc.OrderID
-	repeat := strings.Repeat("?,", len(*orderID)-1) + "?"
-	for _, tag := range *orderID {
+	orderItem := psdc.OrderItem
+	repeat := strings.Repeat("?,", len(*orderItem)-1) + "?"
+	for _, tag := range *orderItem {
 		args = append(args, tag.OrderID)
 	}
 

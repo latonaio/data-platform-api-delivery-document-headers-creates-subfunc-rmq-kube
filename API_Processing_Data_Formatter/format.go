@@ -27,6 +27,204 @@ func (psdc *SDC) ConvertToMetaData(sdc *api_input_reader.SDC) (*MetaData, error)
 	return &metaData, nil
 }
 
+func (psdc *SDC) ConvertToOrderItemByNumberSpecificationKey(sdc *api_input_reader.SDC, businessPartnerLength int, plantLength int) (*OrderItemKey, error) {
+	pm := &requests.OrderItemKey{
+		IssuingPlantPartnerFunction:   "DELIVERFROM",
+		ReceivingPlantPartnerFunction: "DELIVERTO",
+		ItemCompleteDeliveryIsDefined: getBoolPtr(false),
+		ItemDeliveryStatus:            "CL",
+		ItemDeliveryBlockStatus:       getBoolPtr(false),
+	}
+
+	for i := 0; i < businessPartnerLength; i++ {
+		pm.IssuingPlantBusinessPartner = append(pm.IssuingPlantBusinessPartner, nil)
+		pm.ReceivingPlantBusinessPartner = append(pm.ReceivingPlantBusinessPartner, nil)
+	}
+
+	for i := 0; i < plantLength; i++ {
+		pm.IssuingPlant = append(pm.IssuingPlant, nil)
+		pm.ReceivingPlant = append(pm.ReceivingPlant, nil)
+	}
+
+	data := pm
+	orderItemKey := OrderItemKey{
+		IssuingPlantPartnerFunction:       data.IssuingPlantPartnerFunction,
+		IssuingPlantBusinessPartner:       data.IssuingPlantBusinessPartner,
+		IssuingPlantBusinessPartnerFrom:   data.IssuingPlantBusinessPartnerFrom,
+		IssuingPlantBusinessPartnerTo:     data.IssuingPlantBusinessPartnerTo,
+		ReceivingPlantPartnerFunction:     data.ReceivingPlantPartnerFunction,
+		ReceivingPlantBusinessPartner:     data.ReceivingPlantBusinessPartner,
+		ReceivingPlantBusinessPartnerFrom: data.ReceivingPlantBusinessPartnerFrom,
+		ReceivingPlantBusinessPartnerTo:   data.ReceivingPlantBusinessPartnerTo,
+		IssuingPlant:                      data.IssuingPlant,
+		IssuingPlantFrom:                  data.IssuingPlantFrom,
+		IssuingPlantTo:                    data.IssuingPlantTo,
+		ReceivingPlant:                    data.ReceivingPlant,
+		ReceivingPlantFrom:                data.ReceivingPlantFrom,
+		ReceivingPlantTo:                  data.ReceivingPlantTo,
+		ItemCompleteDeliveryIsDefined:     data.ItemCompleteDeliveryIsDefined,
+		ItemDeliveryStatus:                data.ItemDeliveryStatus,
+		ItemDeliveryBlockStatus:           data.ItemDeliveryBlockStatus,
+	}
+
+	return &orderItemKey, nil
+}
+
+func (psdc *SDC) ConvertToOrderItemByNumberSpecification(
+	sdc *api_input_reader.SDC,
+	rows *sql.Rows,
+) (*[]OrderItem, error) {
+	var orderItem []OrderItem
+
+	for i := 0; true; i++ {
+		pm := &requests.OrderItem{}
+
+		if !rows.Next() {
+			if i == 0 {
+				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
+			} else {
+				break
+			}
+		}
+		err := rows.Scan(
+			&pm.OrderID,
+			&pm.OrderItem,
+			&pm.IssuingPlantBusinessPartner,
+			&pm.ReceivingPlantBusinessPartner,
+			&pm.IssuingPlant,
+			&pm.ReceivingPlant,
+			&pm.IssuingPlantPartnerFunction,
+			&pm.ReceivingPlantPartnerFunction,
+			&pm.ItemCompleteDeliveryIsDefined,
+			&pm.ItemDeliveryStatus,
+			&pm.ItemDeliveryBlockStatus,
+		)
+		if err != nil {
+			fmt.Printf("err = %+v \n", err)
+			return nil, err
+		}
+
+		data := pm
+		orderItem = append(orderItem, OrderItem{
+			OrderID:                           data.OrderID,
+			OrderItem:                         data.OrderItem,
+			IssuingPlantPartnerFunction:       data.IssuingPlantPartnerFunction,
+			IssuingPlantBusinessPartner:       data.IssuingPlantBusinessPartner,
+			IssuingPlantBusinessPartnerFrom:   data.IssuingPlantBusinessPartnerFrom,
+			IssuingPlantBusinessPartnerTo:     data.IssuingPlantBusinessPartnerTo,
+			ReceivingPlantPartnerFunction:     data.ReceivingPlantPartnerFunction,
+			ReceivingPlantBusinessPartner:     data.ReceivingPlantBusinessPartner,
+			ReceivingPlantBusinessPartnerFrom: data.ReceivingPlantBusinessPartnerFrom,
+			ReceivingPlantBusinessPartnerTo:   data.ReceivingPlantBusinessPartnerTo,
+			IssuingPlant:                      data.IssuingPlant,
+			IssuingPlantFrom:                  data.IssuingPlantFrom,
+			IssuingPlantTo:                    data.IssuingPlantTo,
+			ReceivingPlant:                    data.ReceivingPlant,
+			ReceivingPlantFrom:                data.ReceivingPlantFrom,
+			ReceivingPlantTo:                  data.ReceivingPlantTo,
+			ItemCompleteDeliveryIsDefined:     data.ItemCompleteDeliveryIsDefined,
+			ItemDeliveryStatus:                data.ItemDeliveryStatus,
+			ItemDeliveryBlockStatus:           data.ItemDeliveryBlockStatus,
+		})
+	}
+
+	return &orderItem, nil
+}
+
+func (psdc *SDC) ConvertToOrderItemByRangeSpecificationKey(sdc *api_input_reader.SDC) (*OrderItemKey, error) {
+	pm := &requests.OrderItemKey{
+		IssuingPlantPartnerFunction:   "DELIVERFROM",
+		ReceivingPlantPartnerFunction: "DELIVERTO",
+		ItemCompleteDeliveryIsDefined: getBoolPtr(false),
+		ItemDeliveryStatus:            "CL",
+		ItemDeliveryBlockStatus:       getBoolPtr(false),
+	}
+
+	data := pm
+	orderItemKey := OrderItemKey{
+		IssuingPlantPartnerFunction:       data.IssuingPlantPartnerFunction,
+		IssuingPlantBusinessPartner:       data.IssuingPlantBusinessPartner,
+		IssuingPlantBusinessPartnerFrom:   data.IssuingPlantBusinessPartnerFrom,
+		IssuingPlantBusinessPartnerTo:     data.IssuingPlantBusinessPartnerTo,
+		ReceivingPlantPartnerFunction:     data.ReceivingPlantPartnerFunction,
+		ReceivingPlantBusinessPartner:     data.ReceivingPlantBusinessPartner,
+		ReceivingPlantBusinessPartnerFrom: data.ReceivingPlantBusinessPartnerFrom,
+		ReceivingPlantBusinessPartnerTo:   data.ReceivingPlantBusinessPartnerTo,
+		IssuingPlant:                      data.IssuingPlant,
+		IssuingPlantFrom:                  data.IssuingPlantFrom,
+		IssuingPlantTo:                    data.IssuingPlantTo,
+		ReceivingPlant:                    data.ReceivingPlant,
+		ReceivingPlantFrom:                data.ReceivingPlantFrom,
+		ReceivingPlantTo:                  data.ReceivingPlantTo,
+		ItemCompleteDeliveryIsDefined:     data.ItemCompleteDeliveryIsDefined,
+		ItemDeliveryStatus:                data.ItemDeliveryStatus,
+		ItemDeliveryBlockStatus:           data.ItemDeliveryBlockStatus,
+	}
+
+	return &orderItemKey, nil
+}
+
+func (psdc *SDC) ConvertToOrderIDByRangeSpecification(
+	sdc *api_input_reader.SDC,
+	rows *sql.Rows,
+) (*[]OrderItem, error) {
+	var orderItem []OrderItem
+
+	for i := 0; true; i++ {
+		pm := &requests.OrderItem{}
+
+		if !rows.Next() {
+			if i == 0 {
+				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
+			} else {
+				break
+			}
+		}
+		err := rows.Scan(
+			&pm.OrderID,
+			&pm.OrderItem,
+			&pm.IssuingPlantBusinessPartner,
+			&pm.ReceivingPlantBusinessPartner,
+			&pm.IssuingPlant,
+			&pm.ReceivingPlant,
+			&pm.IssuingPlantPartnerFunction,
+			&pm.ReceivingPlantPartnerFunction,
+			&pm.ItemCompleteDeliveryIsDefined,
+			&pm.ItemDeliveryStatus,
+			&pm.ItemDeliveryBlockStatus,
+		)
+		if err != nil {
+			fmt.Printf("err = %+v \n", err)
+			return nil, err
+		}
+
+		data := pm
+		orderItem = append(orderItem, OrderItem{
+			OrderID:                           data.OrderID,
+			OrderItem:                         data.OrderItem,
+			IssuingPlantPartnerFunction:       data.IssuingPlantPartnerFunction,
+			IssuingPlantBusinessPartner:       data.IssuingPlantBusinessPartner,
+			IssuingPlantBusinessPartnerFrom:   data.IssuingPlantBusinessPartnerFrom,
+			IssuingPlantBusinessPartnerTo:     data.IssuingPlantBusinessPartnerTo,
+			ReceivingPlantPartnerFunction:     data.ReceivingPlantPartnerFunction,
+			ReceivingPlantBusinessPartner:     data.ReceivingPlantBusinessPartner,
+			ReceivingPlantBusinessPartnerFrom: data.ReceivingPlantBusinessPartnerFrom,
+			ReceivingPlantBusinessPartnerTo:   data.ReceivingPlantBusinessPartnerTo,
+			IssuingPlant:                      data.IssuingPlant,
+			IssuingPlantFrom:                  data.IssuingPlantFrom,
+			IssuingPlantTo:                    data.IssuingPlantTo,
+			ReceivingPlant:                    data.ReceivingPlant,
+			ReceivingPlantFrom:                data.ReceivingPlantFrom,
+			ReceivingPlantTo:                  data.ReceivingPlantTo,
+			ItemCompleteDeliveryIsDefined:     data.ItemCompleteDeliveryIsDefined,
+			ItemDeliveryStatus:                data.ItemDeliveryStatus,
+			ItemDeliveryBlockStatus:           data.ItemDeliveryBlockStatus,
+		})
+	}
+
+	return &orderItem, nil
+}
+
 func (psdc *SDC) ConvertToOrderIDKey(sdc *api_input_reader.SDC) (*OrderIDKey, error) {
 	pm := &requests.OrderIDKey{
 		ReferenceDocument:               sdc.DeliveryDocument.ReferenceDocument,
