@@ -29,11 +29,11 @@ func (f *SubFunction) SetValue(
 		return nil, err
 	}
 
-	outHeaderPartnerPlant, err = dpfm_api_output_formatter.ConvertToHeaderPartnerPlant(sdc, psdc)
-	if err != nil {
-		fmt.Printf("err = %+v \n", err)
-		return nil, err
-	}
+	// outHeaderPartnerPlant, err = dpfm_api_output_formatter.ConvertToHeaderPartnerPlant(sdc, psdc)
+	// if err != nil {
+	// 	fmt.Printf("err = %+v \n", err)
+	// 	return nil, err
+	// }
 
 	osdc.Message = dpfm_api_output_formatter.Message{
 		Header:             *outHeader,

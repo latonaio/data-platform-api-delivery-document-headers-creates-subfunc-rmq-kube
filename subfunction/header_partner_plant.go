@@ -9,7 +9,7 @@ import (
 func (f *SubFunction) OrdersHeaderPartnerPlant(
 	sdc *api_input_reader.SDC,
 	psdc *api_processing_data_formatter.SDC,
-) (*[]api_processing_data_formatter.HeaderOrdersHeaderPartnerPlant, error) {
+) (*[]api_processing_data_formatter.OrdersHeaderPartnerPlant, error) {
 	var args []interface{}
 
 	orderItem := psdc.OrderItem
@@ -27,7 +27,7 @@ func (f *SubFunction) OrdersHeaderPartnerPlant(
 		return nil, err
 	}
 
-	data, err := psdc.ConvertToHeaderOrdersHeaderPartnerPlant(sdc, rows)
+	data, err := psdc.ConvertToOrdersHeaderPartnerPlant(sdc, rows)
 	if err != nil {
 		return nil, err
 	}

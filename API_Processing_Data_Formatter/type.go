@@ -54,13 +54,13 @@ type EC_MC struct {
 }
 
 type SDC struct {
-	MetaData                       *MetaData                         `json:"MetaData"`
-	OrderItem                      *[]OrderItem                      `json:"OrderItem"`
-	OrderID                        *[]OrderID                        `json:"OrderID`
-	CalculateDeliveryDocument      *CalculateDeliveryDocument        `json:"CalculateDeliveryDocument`
-	HeaderOrdersHeader             *[]HeaderOrdersHeader             `json:"HeaderOrdersHeader"`
-	HeaderOrdersHeaderPartner      *[]HeaderOrdersHeaderPartner      `json"HeaderOrdersHeaderPartner"`
-	HeaderOrdersHeaderPartnerPlant *[]HeaderOrdersHeaderPartnerPlant `json"HeaderOrdersHeaderPartnerPlant"`
+	MetaData                  *MetaData                    `json:"MetaData"`
+	OrderItem                 *[]OrderItem                 `json:"OrderItem"`
+	OrderID                   *[]OrderID                   `json:"OrderID"`
+	OrdersHeaderPartnerPlant  *[]OrdersHeaderPartnerPlant  `json:"OrdersHeaderPartnerPlant"`
+	CalculateDeliveryDocument *CalculateDeliveryDocument   `json:"CalculateDeliveryDocument"`
+	HeaderOrdersHeader        *[]HeaderOrdersHeader        `json:"HeaderOrdersHeader"`
+	HeaderOrdersHeaderPartner *[]HeaderOrdersHeaderPartner `json:"HeaderOrdersHeaderPartner"`
 }
 
 type MetaData struct {
@@ -69,6 +69,8 @@ type MetaData struct {
 }
 
 type OrderItemKey struct {
+	OrderID                           *int   `json:"OrderID"`
+	OrderItem                         *int   `json:"OrderItem"`
 	IssuingPlantPartnerFunction       string `json:"IssuingPlantPartnerFunction"`
 	IssuingPlantBusinessPartner       []*int `json:"IssuingPlantBusinessPartner"`
 	IssuingPlantBusinessPartnerFrom   *int   `json:"IssuingPlantBusinessPartnerFrom"`
@@ -118,9 +120,17 @@ type OrderIDKey struct {
 
 type OrderID struct {
 	ReferenceDocument               *int   `json:"ReferenceDocument"`
-	OrderID                         *int   `json:"OrderID`
+	OrderID                         *int   `json:"OrderID"`
 	HeaderCompleteDeliveryIsDefined *bool  `json:"HeaderCompleteDeliveryIsDefined"`
 	OverallDeliveryStatus           string `json:"OverallDeliveryStatus"`
+}
+
+type OrdersHeaderPartnerPlant struct {
+	DeliveryDocument *int   `json:"DeliveryDocument"`
+	OrderID          int    `json:"OrderID"`
+	PartnerFunction  string `json:"PartnerFunction"`
+	BusinessPartner  int    `json:"BusinessPartner"`
+	Plant            string `json:"Plant"`
 }
 
 type CalculateDeliveryDocumentKey struct {
@@ -140,7 +150,7 @@ type CalculateDeliveryDocument struct {
 }
 
 type HeaderOrdersHeader struct {
-	DeliveryDocument         *int    `json:"DeliveryDocument`
+	DeliveryDocument         *int    `json:"DeliveryDocument"`
 	OrderID                  *int    `json:"OrderID"`
 	OrderType                string  `json:"OrderType"`
 	Buyer                    *int    `json:"Buyer"`
@@ -156,7 +166,7 @@ type HeaderOrdersHeader struct {
 }
 
 type HeaderOrdersHeaderPartner struct {
-	DeliveryDocument        *int    `json:"DeliveryDocument`
+	DeliveryDocument        *int    `json:"DeliveryDocument"`
 	OrderID                 *int    `json:"OrderID"`
 	PartnerFunction         string  `json:"PartnerFunction"`
 	BusinessPartner         *int    `json:"BusinessPartner"`
@@ -168,12 +178,4 @@ type HeaderOrdersHeaderPartner struct {
 	Currency                *string `json:"Currency"`
 	ExternalDocumentID      *string `json:"ExternalDocumentID"`
 	AddressID               *int    `json:"AddressID"`
-}
-
-type HeaderOrdersHeaderPartnerPlant struct {
-	DeliveryDocument *int   `json:"DeliveryDocument`
-	OrderID          *int   `json:"OrderID"`
-	PartnerFunction  string `json:"PartnerFunction"`
-	BusinessPartner  *int   `json:"BusinessPartner"`
-	Plant            string `json:"Plant"`
 }

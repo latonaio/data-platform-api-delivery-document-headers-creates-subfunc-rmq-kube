@@ -86,38 +86,38 @@ func ConvertToHeaderPartner(
 	return &headerPartners, nil
 }
 
-func ConvertToHeaderPartnerPlant(
-	sdc *api_input_reader.SDC,
-	psdc *api_processing_data_formatter.SDC,
-) (*[]HeaderPartnerPlant, error) {
-	headerOrdersHeaderPartnerPlant := psdc.HeaderOrdersHeaderPartnerPlant
-	calculateDeliveryDocument := psdc.CalculateDeliveryDocument
-	headerPartnerPlants := make([]HeaderPartnerPlant, 0, len(*headerOrdersHeaderPartnerPlant))
+// func ConvertToHeaderPartnerPlant(
+// 	sdc *api_input_reader.SDC,
+// 	psdc *api_processing_data_formatter.SDC,
+// ) (*[]HeaderPartnerPlant, error) {
+// 	headerOrdersHeaderPartnerPlant := psdc.HeaderOrdersHeaderPartnerPlant
+// 	calculateDeliveryDocument := psdc.CalculateDeliveryDocument
+// 	headerPartnerPlants := make([]HeaderPartnerPlant, 0, len(*headerOrdersHeaderPartnerPlant))
 
-	for _, v := range *headerOrdersHeaderPartnerPlant {
-		headerPartnerPlant := HeaderPartnerPlant{}
-		inputHeaderPartnerPlant := sdc.DeliveryDocument.HeaderPartner[0].HeaderPartnerPlant[0]
-		inputData, err := json.Marshal(inputHeaderPartnerPlant)
-		if err != nil {
-			return nil, err
-		}
-		err = json.Unmarshal(inputData, &headerPartnerPlant)
-		if err != nil {
-			return nil, err
-		}
+// 	for _, v := range *headerOrdersHeaderPartnerPlant {
+// 		headerPartnerPlant := HeaderPartnerPlant{}
+// 		inputHeaderPartnerPlant := sdc.DeliveryDocument.HeaderPartner[0].HeaderPartnerPlant[0]
+// 		inputData, err := json.Marshal(inputHeaderPartnerPlant)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		err = json.Unmarshal(inputData, &headerPartnerPlant)
+// 		if err != nil {
+// 			return nil, err
+// 		}
 
-		data, err := json.Marshal(v)
-		if err != nil {
-			return nil, err
-		}
-		err = json.Unmarshal(data, &headerPartnerPlant)
-		if err != nil {
-			return nil, err
-		}
+// 		data, err := json.Marshal(v)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		err = json.Unmarshal(data, &headerPartnerPlant)
+// 		if err != nil {
+// 			return nil, err
+// 		}
 
-		headerPartnerPlant.DeliveryDocument = calculateDeliveryDocument.DeliveryDocumentLatestNumber
-		headerPartnerPlants = append(headerPartnerPlants, headerPartnerPlant)
-	}
+// 		headerPartnerPlant.DeliveryDocument = calculateDeliveryDocument.DeliveryDocumentLatestNumber
+// 		headerPartnerPlants = append(headerPartnerPlants, headerPartnerPlant)
+// 	}
 
-	return &headerPartnerPlants, nil
-}
+// 	return &headerPartnerPlants, nil
+// }

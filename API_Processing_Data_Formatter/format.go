@@ -48,6 +48,8 @@ func (psdc *SDC) ConvertToOrderItemByNumberSpecificationKey(sdc *api_input_reade
 
 	data := pm
 	orderItemKey := OrderItemKey{
+		OrderID:                           data.OrderID,
+		OrderItem:                         data.OrderItem,
 		IssuingPlantPartnerFunction:       data.IssuingPlantPartnerFunction,
 		IssuingPlantBusinessPartner:       data.IssuingPlantBusinessPartner,
 		IssuingPlantBusinessPartnerFrom:   data.IssuingPlantBusinessPartnerFrom,
@@ -142,6 +144,8 @@ func (psdc *SDC) ConvertToOrderItemByRangeSpecificationKey(sdc *api_input_reader
 
 	data := pm
 	orderItemKey := OrderItemKey{
+		OrderID:                           data.OrderID,
+		OrderItem:                         data.OrderItem,
 		IssuingPlantPartnerFunction:       data.IssuingPlantPartnerFunction,
 		IssuingPlantBusinessPartner:       data.IssuingPlantBusinessPartner,
 		IssuingPlantBusinessPartnerFrom:   data.IssuingPlantBusinessPartnerFrom,
@@ -225,36 +229,48 @@ func (psdc *SDC) ConvertToOrderIDByRangeSpecification(
 	return &orderItem, nil
 }
 
-func (psdc *SDC) ConvertToOrderIDKey(sdc *api_input_reader.SDC) (*OrderIDKey, error) {
-	pm := &requests.OrderIDKey{
-		ReferenceDocument:               sdc.DeliveryDocument.ReferenceDocument,
-		HeaderCompleteDeliveryIsDefined: getBoolPtr(false),
-		OverallDeliveryStatus:           "CL",
+func (psdc *SDC) ConvertToOrderItemByReferenceDocumentKey(sdc *api_input_reader.SDC) (*OrderItemKey, error) {
+	pm := &requests.OrderItemKey{
+		ItemCompleteDeliveryIsDefined: getBoolPtr(false),
+		ItemDeliveryStatus:            "CL",
+		ItemDeliveryBlockStatus:       getBoolPtr(false),
 	}
+
 	data := pm
-
-	orderIDKey := OrderIDKey{
-		ReferenceDocument:               data.ReferenceDocument,
-		HeaderCompleteDeliveryIsDefined: data.HeaderCompleteDeliveryIsDefined,
-		OverallDeliveryStatus:           data.OverallDeliveryStatus,
+	orderItemKey := OrderItemKey{
+		OrderID:                           data.OrderID,
+		OrderItem:                         data.OrderItem,
+		IssuingPlantPartnerFunction:       data.IssuingPlantPartnerFunction,
+		IssuingPlantBusinessPartner:       data.IssuingPlantBusinessPartner,
+		IssuingPlantBusinessPartnerFrom:   data.IssuingPlantBusinessPartnerFrom,
+		IssuingPlantBusinessPartnerTo:     data.IssuingPlantBusinessPartnerTo,
+		ReceivingPlantPartnerFunction:     data.ReceivingPlantPartnerFunction,
+		ReceivingPlantBusinessPartner:     data.ReceivingPlantBusinessPartner,
+		ReceivingPlantBusinessPartnerFrom: data.ReceivingPlantBusinessPartnerFrom,
+		ReceivingPlantBusinessPartnerTo:   data.ReceivingPlantBusinessPartnerTo,
+		IssuingPlant:                      data.IssuingPlant,
+		IssuingPlantFrom:                  data.IssuingPlantFrom,
+		IssuingPlantTo:                    data.IssuingPlantTo,
+		ReceivingPlant:                    data.ReceivingPlant,
+		ReceivingPlantFrom:                data.ReceivingPlantFrom,
+		ReceivingPlantTo:                  data.ReceivingPlantTo,
+		ItemCompleteDeliveryIsDefined:     data.ItemCompleteDeliveryIsDefined,
+		ItemDeliveryStatus:                data.ItemDeliveryStatus,
+		ItemDeliveryBlockStatus:           data.ItemDeliveryBlockStatus,
 	}
 
-	return &orderIDKey, nil
+	return &orderItemKey, nil
 }
 
-func (psdc *SDC) ConvertToOrderID(
+func (psdc *SDC) ConvertToOrderItemByReferenceDocument(
 	sdc *api_input_reader.SDC,
 	rows *sql.Rows,
-) (*[]OrderID, error) {
-	var orderID []OrderID
-	pm := &requests.OrderID{
-		ReferenceDocument:               nil,
-		OrderID:                         nil,
-		HeaderCompleteDeliveryIsDefined: nil,
-		OverallDeliveryStatus:           "",
-	}
+) (*[]OrderItem, error) {
+	var orderItem []OrderItem
 
 	for i := 0; true; i++ {
+		pm := &requests.OrderItem{}
+
 		if !rows.Next() {
 			if i == 0 {
 				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
@@ -264,26 +280,79 @@ func (psdc *SDC) ConvertToOrderID(
 		}
 		err := rows.Scan(
 			&pm.OrderID,
-			&pm.HeaderCompleteDeliveryIsDefined,
-			&pm.OverallDeliveryStatus,
+			&pm.OrderItem,
+			&pm.ItemCompleteDeliveryIsDefined,
+			&pm.ItemDeliveryStatus,
+			&pm.ItemDeliveryBlockStatus,
 		)
 		if err != nil {
 			fmt.Printf("err = %+v \n", err)
 			return nil, err
 		}
 
-		pm.ReferenceDocument = pm.OrderID
-
 		data := pm
-		orderID = append(orderID, OrderID{
-			ReferenceDocument:               data.ReferenceDocument,
-			OrderID:                         data.OrderID,
-			HeaderCompleteDeliveryIsDefined: data.HeaderCompleteDeliveryIsDefined,
-			OverallDeliveryStatus:           data.OverallDeliveryStatus,
+		orderItem = append(orderItem, OrderItem{
+			OrderID:                           data.OrderID,
+			OrderItem:                         data.OrderItem,
+			IssuingPlantPartnerFunction:       data.IssuingPlantPartnerFunction,
+			IssuingPlantBusinessPartner:       data.IssuingPlantBusinessPartner,
+			IssuingPlantBusinessPartnerFrom:   data.IssuingPlantBusinessPartnerFrom,
+			IssuingPlantBusinessPartnerTo:     data.IssuingPlantBusinessPartnerTo,
+			ReceivingPlantPartnerFunction:     data.ReceivingPlantPartnerFunction,
+			ReceivingPlantBusinessPartner:     data.ReceivingPlantBusinessPartner,
+			ReceivingPlantBusinessPartnerFrom: data.ReceivingPlantBusinessPartnerFrom,
+			ReceivingPlantBusinessPartnerTo:   data.ReceivingPlantBusinessPartnerTo,
+			IssuingPlant:                      data.IssuingPlant,
+			IssuingPlantFrom:                  data.IssuingPlantFrom,
+			IssuingPlantTo:                    data.IssuingPlantTo,
+			ReceivingPlant:                    data.ReceivingPlant,
+			ReceivingPlantFrom:                data.ReceivingPlantFrom,
+			ReceivingPlantTo:                  data.ReceivingPlantTo,
+			ItemCompleteDeliveryIsDefined:     data.ItemCompleteDeliveryIsDefined,
+			ItemDeliveryStatus:                data.ItemDeliveryStatus,
+			ItemDeliveryBlockStatus:           data.ItemDeliveryBlockStatus,
 		})
 	}
 
-	return &orderID, nil
+	return &orderItem, nil
+}
+
+func (psdc *SDC) ConvertToOrdersHeaderPartnerPlant(
+	sdc *api_input_reader.SDC,
+	rows *sql.Rows,
+) (*[]OrdersHeaderPartnerPlant, error) {
+	var ordersHeaderPartnerPlant []OrdersHeaderPartnerPlant
+
+	for i := 0; true; i++ {
+		pm := &requests.OrdersHeaderPartnerPlant{}
+		if !rows.Next() {
+			if i == 0 {
+				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
+			} else {
+				break
+			}
+		}
+		err := rows.Scan(
+			&pm.OrderID,
+			&pm.PartnerFunction,
+			&pm.BusinessPartner,
+			&pm.Plant,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		data := pm
+		ordersHeaderPartnerPlant = append(ordersHeaderPartnerPlant, OrdersHeaderPartnerPlant{
+			DeliveryDocument: data.DeliveryDocument,
+			OrderID:          data.OrderID,
+			PartnerFunction:  data.PartnerFunction,
+			BusinessPartner:  data.BusinessPartner,
+			Plant:            data.Plant,
+		})
+	}
+
+	return &ordersHeaderPartnerPlant, nil
 }
 
 func (psdc *SDC) ConvertToCalculateDeliveryDocumentKey() (*CalculateDeliveryDocumentKey, error) {
@@ -491,49 +560,4 @@ func (psdc *SDC) ConvertToHeaderOrdersHeaderPartner(
 	}
 
 	return &headerOrdersHeaderPartner, nil
-}
-
-func (psdc *SDC) ConvertToHeaderOrdersHeaderPartnerPlant(
-	sdc *api_input_reader.SDC,
-	rows *sql.Rows,
-) (*[]HeaderOrdersHeaderPartnerPlant, error) {
-	var headerOrdersHeaderPartnerPlant []HeaderOrdersHeaderPartnerPlant
-
-	pm := &requests.HeaderOrdersHeaderPartnerPlant{
-		DeliveryDocument: nil,
-		OrderID:          nil,
-		PartnerFunction:  "",
-		BusinessPartner:  nil,
-		Plant:            "",
-	}
-
-	for i := 0; true; i++ {
-		if !rows.Next() {
-			if i == 0 {
-				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
-			} else {
-				break
-			}
-		}
-		err := rows.Scan(
-			&pm.OrderID,
-			&pm.PartnerFunction,
-			&pm.BusinessPartner,
-			&pm.Plant,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		data := pm
-		headerOrdersHeaderPartnerPlant = append(headerOrdersHeaderPartnerPlant, HeaderOrdersHeaderPartnerPlant{
-			DeliveryDocument: data.DeliveryDocument,
-			OrderID:          data.OrderID,
-			PartnerFunction:  data.PartnerFunction,
-			BusinessPartner:  data.BusinessPartner,
-			Plant:            data.Plant,
-		})
-	}
-
-	return &headerOrdersHeaderPartnerPlant, nil
 }

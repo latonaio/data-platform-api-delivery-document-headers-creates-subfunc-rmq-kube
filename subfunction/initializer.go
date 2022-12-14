@@ -195,26 +195,29 @@ func (f *SubFunction) OrderItemByRangeSpecification(
 	return data, err
 }
 
-func (f *SubFunction) OrderID(
+func (f *SubFunction) OrderItemByReferenceDocument(
 	sdc *api_input_reader.SDC,
 	psdc *api_processing_data_formatter.SDC,
-) (*[]api_processing_data_formatter.OrderID, error) {
-	dataKey, err := psdc.ConvertToOrderIDKey(sdc)
+) (*[]api_processing_data_formatter.OrderItem, error) {
+	dataKey, err := psdc.ConvertToOrderItemByReferenceDocumentKey(sdc)
 	if err != nil {
 		return nil, err
 	}
 
+	dataKey.OrderID = sdc.DeliveryDocumentInputParameters.ReferenceDocument
+	dataKey.OrderItem = sdc.DeliveryDocumentInputParameters.ReferenceDocumentItem
+
 	rows, err := f.db.Query(
-		`SELECT OrderID, HeaderCompleteDeliveryIsDefined, OverallDeliveryStatus
-		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_orders_header_data
-		WHERE (OrderID, HeaderCompleteDeliveryIsDefined) = (?, ?)
-		AND OverallDeliveryStatus <> ?;`, dataKey.ReferenceDocument, dataKey.HeaderCompleteDeliveryIsDefined, dataKey.OverallDeliveryStatus,
+		`SELECT OrderID, OrderItem, ItemCompleteDeliveryIsDefined, ItemDeliveryStatus, ItemDeliveryBlockStatus
+		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_orders_item_data
+		WHERE (OrderID, OrderItem, ItemCompleteDeliveryIsDefined, ItemDeliveryBlockStatus) = (?, ?, ?, ?)
+		AND ItemDeliveryStatus <> ?;`, dataKey.OrderID, dataKey.OrderItem, dataKey.ItemCompleteDeliveryIsDefined, dataKey.ItemDeliveryBlockStatus, dataKey.ItemDeliveryStatus,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	data, err := psdc.ConvertToOrderID(sdc, rows)
+	data, err := psdc.ConvertToOrderItemByReferenceDocument(sdc, rows)
 	if err != nil {
 		return nil, err
 	}
@@ -254,19 +257,19 @@ func (f *SubFunction) CreateSdc(
 			return
 		}
 
-		// I-2. ヘッダパートナプラントのデータ取得
-		psdc.HeaderOrdersHeaderPartnerPlant, e = f.OrdersHeaderPartnerPlant(sdc, psdc)
-		if e != nil {
-			err = e
-			return
-		}
-
-		// // II-0-1-1. OrderIDが未入出荷であり、かつ、OrderIDに入出荷伝票未登録残がある、明細の取得
-		// psdc.OrderID, e = f.OrderID(sdc, psdc)
+		// // II-1-1. OrderIDが未入出荷であり、かつ、OrderIDに入出荷伝票未登録残がある、明細の取得
+		// psdc.OrderItem, e = f.OrderItemByReferenceDocument(sdc, psdc)
 		// if e != nil {
 		// 	err = e
 		// 	return
 		// }
+
+		// I-2. ヘッダパートナプラントのデータ取得
+		psdc.OrdersHeaderPartnerPlant, e = f.OrdersHeaderPartnerPlant(sdc, psdc)
+		if e != nil {
+			err = e
+			return
+		}
 
 		// // 1-1. オーダー参照レコード・値の取得（オーダーヘッダ）
 		// psdc.HeaderOrdersHeader, e = f.OrdersHeader(sdc, psdc)
