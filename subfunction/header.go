@@ -4,46 +4,16 @@ import (
 	api_input_reader "data-platform-api-delivery-document-headers-creates-subfunc/API_Input_Reader"
 	api_processing_data_formatter "data-platform-api-delivery-document-headers-creates-subfunc/API_Processing_Data_Formatter"
 	"strings"
+
+	"golang.org/x/xerrors"
 )
-
-func (f *SubFunction) OrdersHeader(
-	sdc *api_input_reader.SDC,
-	psdc *api_processing_data_formatter.SDC,
-) (*[]api_processing_data_formatter.HeaderOrdersHeader, error) {
-	var args []interface{}
-
-	orderID := psdc.OrderID
-	repeat := strings.Repeat("?,", len(*orderID)-1) + "?"
-	for _, tag := range *orderID {
-		args = append(args, tag.OrderID)
-	}
-
-	rows, err := f.db.Query(
-		`SELECT OrderID, OrderType, Buyer, Seller, ContractType, VaridityStartDate, VaridityEndDate, InvoiceScheduleStartDate, InvoiceScheduleEndDate, TransactionCurrency, Incoterms, IsExportImportDelivery
-		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_orders_header_data
-		WHERE OrderID IN ( `+repeat+` );`, args...,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	data, err := psdc.ConvertToHeaderOrdersHeader(sdc, rows)
-	if err != nil {
-		return nil, err
-	}
-
-	return data, err
-}
 
 func (f *SubFunction) CalculateDeliveryDocument(
 	sdc *api_input_reader.SDC,
 	psdc *api_processing_data_formatter.SDC,
 ) (*api_processing_data_formatter.CalculateDeliveryDocument, error) {
 	metaData := psdc.MetaData
-	dataKey, err := psdc.ConvertToCalculateDeliveryDocumentKey()
-	if err != nil {
-		return nil, err
-	}
+	dataKey := psdc.ConvertToCalculateDeliveryDocumentKey()
 
 	dataKey.ServiceLabel = metaData.ServiceLabel
 
@@ -56,22 +26,50 @@ func (f *SubFunction) CalculateDeliveryDocument(
 		return nil, err
 	}
 
-	dataQueryGets, err := psdc.ConvertToCalculateDeliveryDocumentQueryGets(sdc, rows)
+	dataQueryGets, err := psdc.ConvertToCalculateDeliveryDocumentQueryGets(rows)
 	if err != nil {
 		return nil, err
 	}
 
-	calculateDeliveryDocument := CalculateDeliveryDocument(*dataQueryGets.DeliveryDocumentLatestNumber)
+	if dataQueryGets.DeliveryDocumentLatestNumber == nil {
+		return nil, xerrors.Errorf("'data_platform_number_range_latest_number_data'テーブルのLatestNumberがNULLです。")
+	}
 
-	data, err := psdc.ConvertToCalculateDeliveryDocument(calculateDeliveryDocument)
+	deliveryDocumentLatestNumber := dataQueryGets.DeliveryDocumentLatestNumber
+	deliveryDocument := *dataQueryGets.DeliveryDocumentLatestNumber + 1
+
+	data := psdc.ConvertToCalculateDeliveryDocument(deliveryDocumentLatestNumber, deliveryDocument)
+
+	return data, err
+}
+
+func (f *SubFunction) OrdersHeader(
+	sdc *api_input_reader.SDC,
+	psdc *api_processing_data_formatter.SDC,
+) (*[]api_processing_data_formatter.OrdersHeader, error) {
+	var args []interface{}
+
+	orderID := psdc.OrderID
+	repeat := strings.Repeat("?,", len(*orderID)-1) + "?"
+	for _, v := range *orderID {
+		args = append(args, v.OrderID)
+	}
+
+	rows, err := f.db.Query(
+		`SELECT OrderID, OrderType, Buyer, Seller, ContractType, ValidityStartDate, ValidityEndDate, 
+		TransactionCurrency, Incoterms, BillFromParty, BillToParty, BillFromCountry, BillToCountry, 
+		Payer, Payee, IsExportImportDelivery
+		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_orders_header_data
+		WHERE OrderID IN ( `+repeat+` );`, args...,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := psdc.ConvertToOrdersHeader(rows)
 	if err != nil {
 		return nil, err
 	}
 
 	return data, err
-}
-
-func CalculateDeliveryDocument(latestNumber int) *int {
-	res := latestNumber + 1
-	return &res
 }

@@ -12,33 +12,33 @@ func (f *SubFunction) SetValue(
 	osdc *dpfm_api_output_formatter.SDC,
 	psdc *api_processing_data_formatter.SDC,
 ) (*dpfm_api_output_formatter.SDC, error) {
-	var outHeader *[]dpfm_api_output_formatter.Header
-	var outHeaderPartner *[]dpfm_api_output_formatter.HeaderPartner
-	var outHeaderPartnerPlant *[]dpfm_api_output_formatter.HeaderPartnerPlant
+	var header *[]dpfm_api_output_formatter.Header
+	var headerPartner *[]dpfm_api_output_formatter.HeaderPartner
+	var headerPartnerPlant *[]dpfm_api_output_formatter.HeaderPartnerPlant
 	var err error
 
-	outHeader, err = dpfm_api_output_formatter.ConvertToHeader(sdc, psdc)
+	header, err = dpfm_api_output_formatter.ConvertToHeader(sdc, psdc)
 	if err != nil {
 		fmt.Printf("err = %+v \n", err)
 		return nil, err
 	}
 
-	outHeaderPartner, err = dpfm_api_output_formatter.ConvertToHeaderPartner(sdc, psdc)
+	headerPartner, err = dpfm_api_output_formatter.ConvertToHeaderPartner(sdc, psdc)
 	if err != nil {
 		fmt.Printf("err = %+v \n", err)
 		return nil, err
 	}
 
-	// outHeaderPartnerPlant, err = dpfm_api_output_formatter.ConvertToHeaderPartnerPlant(sdc, psdc)
+	// headerPartnerPlant, err = dpfm_api_output_formatter.ConvertToHeaderPartnerPlant(sdc, psdc)
 	// if err != nil {
 	// 	fmt.Printf("err = %+v \n", err)
 	// 	return nil, err
 	// }
 
 	osdc.Message = dpfm_api_output_formatter.Message{
-		Header:             *outHeader,
-		HeaderPartner:      *outHeaderPartner,
-		HeaderPartnerPlant: *outHeaderPartnerPlant,
+		Header:             header,
+		HeaderPartner:      headerPartner,
+		HeaderPartnerPlant: headerPartnerPlant,
 	}
 
 	return osdc, nil

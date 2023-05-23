@@ -31,78 +31,97 @@ func NewSubFunction(ctx context.Context, db *database.Mysql, l *logger.Logger) *
 func (f *SubFunction) MetaData(
 	sdc *api_input_reader.SDC,
 	psdc *api_processing_data_formatter.SDC,
-) (*api_processing_data_formatter.MetaData, error) {
-	var err error
-	var metaData *api_processing_data_formatter.MetaData
+) *api_processing_data_formatter.MetaData {
+	metaData := psdc.ConvertToMetaData(sdc)
 
-	metaData, err = psdc.ConvertToMetaData(sdc)
+	return metaData
+}
+
+func (f *SubFunction) ProcessType(
+	sdc *api_input_reader.SDC,
+	psdc *api_processing_data_formatter.SDC,
+) *api_processing_data_formatter.ProcessType {
+	processType := psdc.ConvertToProcessType()
+
+	processType.BulkProcess = true
+	// processType.IndividualProcess = true
+
+	return processType
+}
+
+func (f *SubFunction) OrderIDInBulkProcess(
+	sdc *api_input_reader.SDC,
+	psdc *api_processing_data_formatter.SDC,
+) (*[]api_processing_data_formatter.OrderID, error) {
+	var data *[]api_processing_data_formatter.OrderID
+	var err error
+
+	// data, err = f.OrderIDByArraySpec(sdc, psdc)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	data, err = f.OrderIDByRangeSpec(sdc, psdc)
 	if err != nil {
 		return nil, err
 	}
 
-	return metaData, nil
+	return data, nil
 }
 
-func (f *SubFunction) OrderItemByNumberSpecification(
+func (f *SubFunction) OrderIDByArraySpec(
 	sdc *api_input_reader.SDC,
 	psdc *api_processing_data_formatter.SDC,
-) (*[]api_processing_data_formatter.OrderItem, error) {
+) (*[]api_processing_data_formatter.OrderID, error) {
 	var args []interface{}
 
 	issuingPlantBusinessPartner := sdc.DeliveryDocumentInputParameters.IssuingPlantBusinessPartner
 	receivingPlantBusinessPartner := sdc.DeliveryDocumentInputParameters.ReceivingPlantBusinessPartner
-
-	if len(*issuingPlantBusinessPartner) != len(*receivingPlantBusinessPartner) {
-		return nil, nil
-	}
-
 	issuingPlant := sdc.DeliveryDocumentInputParameters.IssuingPlant
 	receivingPlant := sdc.DeliveryDocumentInputParameters.ReceivingPlant
 
-	if len(*issuingPlant) != len(*receivingPlant) {
-		return nil, nil
-	}
-
-	dataKey, err := psdc.ConvertToOrderItemByNumberSpecificationKey(sdc, len(*issuingPlantBusinessPartner), len(*issuingPlant))
-	if err != nil {
-		return nil, err
-	}
+	dataKey := psdc.ConvertToOrderIDKey()
 
 	for i := range *issuingPlantBusinessPartner {
-		dataKey.IssuingPlantBusinessPartner[i] = (*issuingPlantBusinessPartner)[i]
-		dataKey.ReceivingPlantBusinessPartner[i] = (*receivingPlantBusinessPartner)[i]
+		dataKey.IssuingPlantBusinessPartner = append(dataKey.IssuingPlantBusinessPartner, (*issuingPlantBusinessPartner)[i])
 	}
-
+	for i := range *receivingPlantBusinessPartner {
+		dataKey.ReceivingPlantBusinessPartner = append(dataKey.ReceivingPlantBusinessPartner, (*receivingPlantBusinessPartner)[i])
+	}
 	for i := range *issuingPlant {
-		dataKey.IssuingPlant[i] = (*issuingPlant)[i]
-		dataKey.ReceivingPlant[i] = (*receivingPlant)[i]
+		dataKey.IssuingPlant = append(dataKey.IssuingPlant, (*issuingPlant)[i])
+	}
+	for i := range *receivingPlant {
+		dataKey.ReceivingPlant = append(dataKey.ReceivingPlant, (*receivingPlant)[i])
 	}
 
-	repeat1 := strings.Repeat("(?,?),", len(dataKey.IssuingPlantBusinessPartner)-1) + "(?,?)"
-	for i := range dataKey.IssuingPlantBusinessPartner {
-		args = append(args, dataKey.IssuingPlantBusinessPartner[i], dataKey.ReceivingPlantBusinessPartner[i])
+	repeat1 := strings.Repeat("?,", len(dataKey.IssuingPlantBusinessPartner)-1) + "?"
+	for _, v := range dataKey.IssuingPlantBusinessPartner {
+		args = append(args, v)
+	}
+	repeat2 := strings.Repeat("?,", len(dataKey.ReceivingPlantBusinessPartner)-1) + "?"
+	for _, v := range dataKey.ReceivingPlantBusinessPartner {
+		args = append(args, v)
+	}
+	repeat3 := strings.Repeat("?,", len(dataKey.IssuingPlant)-1) + "?"
+	for _, v := range dataKey.IssuingPlant {
+		args = append(args, v)
+	}
+	repeat4 := strings.Repeat("?,", len(dataKey.ReceivingPlant)-1) + "?"
+	for _, v := range dataKey.ReceivingPlant {
+		args = append(args, v)
 	}
 
-	repeat2 := strings.Repeat("(?,?),", len(dataKey.IssuingPlant)-1) + "(?,?)"
-	for i := range dataKey.IssuingPlant {
-		args = append(args, dataKey.IssuingPlant[i], dataKey.ReceivingPlant[i])
-	}
-
-	args = append(
-		args,
-		dataKey.IssuingPlantPartnerFunction,
-		dataKey.ReceivingPlantPartnerFunction,
-		dataKey.ItemCompleteDeliveryIsDefined,
-		dataKey.ItemDeliveryBlockStatus,
-		dataKey.ItemDeliveryStatus,
-	)
+	args = append(args, dataKey.IssuingPlantPartnerFunction, dataKey.ReceivingPlantPartnerFunction, dataKey.ItemCompleteDeliveryIsDefined, dataKey.ItemDeliveryBlockStatus, dataKey.ItemDeliveryStatus)
 
 	var count *int
-	err = f.db.QueryRow(
+	err := f.db.QueryRow(
 		`SELECT COUNT(*)
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_orders_item_data
-		WHERE (IssuingPlantBusinessPartner, ReceivingPlantBusinessPartner) IN ( `+repeat1+` )
-		AND (IssuingPlant, ReceivingPlant) IN ( `+repeat2+` )
+		WHERE IssuingPlantBusinessPartner IN ( `+repeat1+` )
+		AND ReceivingPlantBusinessPartner IN ( `+repeat2+` )
+		AND IssuingPlant IN ( `+repeat3+` )
+		AND ReceivingPlant IN ( `+repeat4+` )
 		AND (IssuingPlantPartnerFunction, ReceivingPlantPartnerFunction, ItemCompleteDeliveryIsDefined, ItemDeliveryBlockStatus) = (?, ?, ?, ?)
 		AND ItemDeliveryStatus <> ?;`, args...,
 	).Scan(&count)
@@ -118,8 +137,10 @@ func (f *SubFunction) OrderItemByNumberSpecification(
 		IssuingPlant, ReceivingPlant, IssuingPlantPartnerFunction, ReceivingPlantPartnerFunction,
 		ItemCompleteDeliveryIsDefined, ItemDeliveryStatus, ItemDeliveryBlockStatus
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_orders_item_data
-		WHERE (IssuingPlantBusinessPartner, ReceivingPlantBusinessPartner) IN ( `+repeat1+` )
-		AND (IssuingPlant, ReceivingPlant) IN ( `+repeat2+` )
+		WHERE IssuingPlantBusinessPartner IN ( `+repeat1+` )
+		AND ReceivingPlantBusinessPartner IN ( `+repeat2+` )
+		AND IssuingPlant IN ( `+repeat3+` )
+		AND ReceivingPlant IN ( `+repeat4+` )
 		AND (IssuingPlantPartnerFunction, ReceivingPlantPartnerFunction, ItemCompleteDeliveryIsDefined, ItemDeliveryBlockStatus) = (?, ?, ?, ?)
 		AND ItemDeliveryStatus <> ?;`, args...,
 	)
@@ -127,7 +148,7 @@ func (f *SubFunction) OrderItemByNumberSpecification(
 		return nil, err
 	}
 
-	data, err := psdc.ConvertToOrderItemByNumberSpecification(sdc, rows)
+	data, err := psdc.ConvertToOrderIDByArraySpec(rows)
 	if err != nil {
 		return nil, err
 	}
@@ -135,14 +156,11 @@ func (f *SubFunction) OrderItemByNumberSpecification(
 	return data, err
 }
 
-func (f *SubFunction) OrderItemByRangeSpecification(
+func (f *SubFunction) OrderIDByRangeSpec(
 	sdc *api_input_reader.SDC,
 	psdc *api_processing_data_formatter.SDC,
-) (*[]api_processing_data_formatter.OrderItem, error) {
-	dataKey, err := psdc.ConvertToOrderItemByRangeSpecificationKey(sdc)
-	if err != nil {
-		return nil, err
-	}
+) (*[]api_processing_data_formatter.OrderID, error) {
+	dataKey := psdc.ConvertToOrderIDKey()
 
 	dataKey.IssuingPlantBusinessPartnerFrom = sdc.DeliveryDocumentInputParameters.IssuingPlantBusinessPartnerFrom
 	dataKey.IssuingPlantBusinessPartnerTo = sdc.DeliveryDocumentInputParameters.IssuingPlantBusinessPartnerTo
@@ -154,7 +172,7 @@ func (f *SubFunction) OrderItemByRangeSpecification(
 	dataKey.ReceivingPlantTo = sdc.DeliveryDocumentInputParameters.ReceivingPlantTo
 
 	var count *int
-	err = f.db.QueryRow(
+	err := f.db.QueryRow(
 		`SELECT COUNT(*)
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_orders_item_data
 		WHERE IssuingPlantBusinessPartner BETWEEN ? AND ?
@@ -187,7 +205,7 @@ func (f *SubFunction) OrderItemByRangeSpecification(
 		return nil, err
 	}
 
-	data, err := psdc.ConvertToOrderIDByRangeSpecification(sdc, rows)
+	data, err := psdc.ConvertToOrderIDByRangeSpec(rows)
 	if err != nil {
 		return nil, err
 	}
@@ -195,14 +213,11 @@ func (f *SubFunction) OrderItemByRangeSpecification(
 	return data, err
 }
 
-func (f *SubFunction) OrderItemByReferenceDocument(
+func (f *SubFunction) OrderIDInIndividualProcess(
 	sdc *api_input_reader.SDC,
 	psdc *api_processing_data_formatter.SDC,
-) (*[]api_processing_data_formatter.OrderItem, error) {
-	dataKey, err := psdc.ConvertToOrderItemByReferenceDocumentKey(sdc)
-	if err != nil {
-		return nil, err
-	}
+) (*[]api_processing_data_formatter.OrderID, error) {
+	dataKey := psdc.ConvertToOrderIDInIndividualProcessKey()
 
 	dataKey.OrderID = sdc.DeliveryDocumentInputParameters.ReferenceDocument
 	dataKey.OrderItem = sdc.DeliveryDocumentInputParameters.ReferenceDocumentItem
@@ -217,7 +232,7 @@ func (f *SubFunction) OrderItemByReferenceDocument(
 		return nil, err
 	}
 
-	data, err := psdc.ConvertToOrderItemByReferenceDocument(sdc, rows)
+	data, err := psdc.ConvertToOrderIDInIndividualProcess(rows)
 	if err != nil {
 		return nil, err
 	}
@@ -236,54 +251,49 @@ func (f *SubFunction) CreateSdc(
 	wg := sync.WaitGroup{}
 	wg.Add(2)
 
-	psdc.MetaData, err = f.MetaData(sdc, psdc)
-	if err != nil {
-		return err
-	}
+	psdc.MetaData = f.MetaData(sdc, psdc)
+	psdc.ProcessType = f.ProcessType(sdc, psdc)
+
+	processType := psdc.ProcessType
 
 	go func(wg *sync.WaitGroup) {
 		defer wg.Done()
-		// // I-1. OrderItemの絞り込み
-		// psdc.OrderItem, e = f.OrderItemByNumberSpecification(sdc, psdc)
-		// if e != nil {
-		// 	err = e
-		// 	return
-		// }
+		if processType.BulkProcess {
+			// I-1. OrderItemの絞り込み
+			psdc.OrderID, e = f.OrderIDInBulkProcess(sdc, psdc)
+			if e != nil {
+				err = e
+				return
+			}
+		} else if processType.IndividualProcess {
+			// II-1-1. OrderIDが未入出荷であり、かつ、OrderIDに入出荷伝票未登録残がある、明細の取得
+			psdc.OrderID, e = f.OrderIDInIndividualProcess(sdc, psdc)
+			if e != nil {
+				err = e
+				return
+			}
+		}
 
-		// I-1. OrderItemの絞り込み
-		psdc.OrderItem, e = f.OrderItemByRangeSpecification(sdc, psdc)
+		// I-2. ヘッダパートナプラントのデータ取得, II-1-2. ヘッダパートナプラントのデータ取得
+		psdc.HeaderPartnerPlant, e = f.HeaderPartnerPlant(sdc, psdc)
 		if e != nil {
 			err = e
 			return
 		}
 
-		// // II-1-1. OrderIDが未入出荷であり、かつ、OrderIDに入出荷伝票未登録残がある、明細の取得
-		// psdc.OrderItem, e = f.OrderItemByReferenceDocument(sdc, psdc)
-		// if e != nil {
-		// 	err = e
-		// 	return
-		// }
-
-		// I-2. ヘッダパートナプラントのデータ取得
-		psdc.OrdersHeaderPartnerPlant, e = f.OrdersHeaderPartnerPlant(sdc, psdc)
+		// 1-1. オーダー参照レコード・値の取得（オーダーヘッダ）
+		psdc.OrdersHeader, e = f.OrdersHeader(sdc, psdc)
 		if e != nil {
 			err = e
 			return
 		}
 
-		// // 1-1. オーダー参照レコード・値の取得（オーダーヘッダ）
-		// psdc.HeaderOrdersHeader, e = f.OrdersHeader(sdc, psdc)
-		// if e != nil {
-		// 	err = e
-		// 	return
-		// }
-
-		// // 1-2. オーダー参照レコード・値の取得（オーダーヘッダパートナ）
-		// psdc.HeaderOrdersHeaderPartner, e = f.OrdersHeaderPartner(sdc, psdc)
-		// if e != nil {
-		// 	err = e
-		// 	return
-		// }
+		// 1-2. オーダー参照レコード・値の取得（オーダーヘッダパートナ）
+		psdc.OrdersHeaderPartner, e = f.OrdersHeaderPartner(sdc, psdc)
+		if e != nil {
+			err = e
+			return
+		}
 	}(&wg)
 
 	go func(wg *sync.WaitGroup) {
@@ -303,7 +313,7 @@ func (f *SubFunction) CreateSdc(
 
 	f.l.Info(psdc)
 
-	// osdc, err = f.SetValue(sdc, osdc, psdc)
+	osdc, err = f.SetValue(sdc, osdc, psdc)
 	if err != nil {
 		return err
 	}

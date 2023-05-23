@@ -54,21 +54,27 @@ type EC_MC struct {
 }
 
 type SDC struct {
-	MetaData                  *MetaData                    `json:"MetaData"`
-	OrderItem                 *[]OrderItem                 `json:"OrderItem"`
-	OrderID                   *[]OrderID                   `json:"OrderID"`
-	OrdersHeaderPartnerPlant  *[]OrdersHeaderPartnerPlant  `json:"OrdersHeaderPartnerPlant"`
-	CalculateDeliveryDocument *CalculateDeliveryDocument   `json:"CalculateDeliveryDocument"`
-	HeaderOrdersHeader        *[]HeaderOrdersHeader        `json:"HeaderOrdersHeader"`
-	HeaderOrdersHeaderPartner *[]HeaderOrdersHeaderPartner `json:"HeaderOrdersHeaderPartner"`
+	MetaData                  *MetaData                  `json:"MetaData"`
+	ProcessType               *ProcessType               `json:"ProcessType"`
+	OrderID                   *[]OrderID                 `json:"OrderID"`
+	HeaderPartnerPlant        *[]HeaderPartnerPlant      `json:"HeaderPartnerPlant"`
+	CalculateDeliveryDocument *CalculateDeliveryDocument `json:"CalculateDeliveryDocument"`
+	OrdersHeader              *[]OrdersHeader            `json:"OrdersHeader"`
+	OrdersHeaderPartner       *[]OrdersHeaderPartner     `json:"OrdersHeaderPartner"`
 }
 
+// Initializer
 type MetaData struct {
 	BusinessPartnerID *int   `json:"business_partner"`
 	ServiceLabel      string `json:"service_label"`
 }
 
-type OrderItemKey struct {
+type ProcessType struct {
+	BulkProcess       bool `json:"BulkProcess"`
+	IndividualProcess bool `json:"IndividualProcess"`
+}
+
+type OrderIDKey struct {
 	OrderID                           *int   `json:"OrderID"`
 	OrderItem                         *int   `json:"OrderItem"`
 	IssuingPlantPartnerFunction       string `json:"IssuingPlantPartnerFunction"`
@@ -85,91 +91,72 @@ type OrderItemKey struct {
 	ReceivingPlant                    []*int `json:"ReceivingPlant"`
 	ReceivingPlantFrom                int    `json:"ReceivingPlantFrom"`
 	ReceivingPlantTo                  int    `json:"ReceivingPlantTo"`
-	ItemCompleteDeliveryIsDefined     *bool  `json:"ItemCompleteDeliveryIsDefined"`
+	ItemCompleteDeliveryIsDefined     bool   `json:"ItemCompleteDeliveryIsDefined"`
 	ItemDeliveryStatus                string `json:"ItemDeliveryStatus"`
-	ItemDeliveryBlockStatus           *bool  `json:"ItemDeliveryBlockStatus"`
-}
-
-type OrderItem struct {
-	OrderID                           *int   `json:"OrderID"`
-	OrderItem                         *int   `json:"OrderItem"`
-	IssuingPlantPartnerFunction       string `json:"IssuingPlantPartnerFunction"`
-	IssuingPlantBusinessPartner       *int   `json:"IssuingPlantBusinessPartner"`
-	IssuingPlantBusinessPartnerFrom   *int   `json:"IssuingPlantBusinessPartnerFrom"`
-	IssuingPlantBusinessPartnerTo     *int   `json:"IssuingPlantBusinessPartnerTo"`
-	ReceivingPlantPartnerFunction     string `json:"ReceivingPlantPartnerFunction"`
-	ReceivingPlantBusinessPartner     *int   `json:"ReceivingPlantBusinessPartner"`
-	ReceivingPlantBusinessPartnerFrom *int   `json:"ReceivingPlantBusinessPartnerFrom"`
-	ReceivingPlantBusinessPartnerTo   *int   `json:"ReceivingPlantBusinessPartnerTo"`
-	IssuingPlant                      *int   `json:"IssuingPlant"`
-	IssuingPlantFrom                  *int   `json:"IssuingPlantFrom"`
-	IssuingPlantTo                    *int   `json:"IssuingPlantTo"`
-	ReceivingPlant                    *int   `json:"ReceivingPlant"`
-	ReceivingPlantFrom                int    `json:"ReceivingPlantFrom"`
-	ReceivingPlantTo                  int    `json:"ReceivingPlantTo"`
-	ItemCompleteDeliveryIsDefined     *bool  `json:"ItemCompleteDeliveryIsDefined"`
-	ItemDeliveryStatus                string `json:"ItemDeliveryStatus"`
-	ItemDeliveryBlockStatus           *bool  `json:"ItemDeliveryBlockStatus"`
-}
-
-type OrderIDKey struct {
-	ReferenceDocument               *int   `json:"ReferenceDocument"`
-	HeaderCompleteDeliveryIsDefined *bool  `json:"HeaderCompleteDeliveryIsDefined"`
-	OverallDeliveryStatus           string `json:"OverallDeliveryStatus"`
+	ItemDeliveryBlockStatus           bool   `json:"ItemDeliveryBlockStatus"`
 }
 
 type OrderID struct {
-	ReferenceDocument               *int   `json:"ReferenceDocument"`
-	OrderID                         *int   `json:"OrderID"`
-	HeaderCompleteDeliveryIsDefined *bool  `json:"HeaderCompleteDeliveryIsDefined"`
-	OverallDeliveryStatus           string `json:"OverallDeliveryStatus"`
+	OrderID                       int     `json:"OrderID"`
+	OrderItem                     int     `json:"OrderItem"`
+	IssuingPlantPartnerFunction   *string `json:"IssuingPlantPartnerFunction"`
+	IssuingPlantBusinessPartner   *int    `json:"IssuingPlantBusinessPartner"`
+	ReceivingPlantPartnerFunction *string `json:"ReceivingPlantPartnerFunction"`
+	ReceivingPlantBusinessPartner *int    `json:"ReceivingPlantBusinessPartner"`
+	IssuingPlant                  *int    `json:"IssuingPlant"`
+	ReceivingPlant                *int    `json:"ReceivingPlant"`
+	ItemCompleteDeliveryIsDefined *bool   `json:"ItemCompleteDeliveryIsDefined"`
+	ItemDeliveryStatus            *string `json:"ItemDeliveryStatus"`
+	ItemDeliveryBlockStatus       *bool   `json:"ItemDeliveryBlockStatus"`
 }
 
-type OrdersHeaderPartnerPlant struct {
-	DeliveryDocument *int   `json:"DeliveryDocument"`
-	OrderID          int    `json:"OrderID"`
-	PartnerFunction  string `json:"PartnerFunction"`
-	BusinessPartner  int    `json:"BusinessPartner"`
-	Plant            string `json:"Plant"`
+type HeaderPartnerPlant struct {
+	OrderID         int    `json:"OrderID"`
+	PartnerFunction string `json:"PartnerFunction"`
+	BusinessPartner int    `json:"BusinessPartner"`
+	Plant           string `json:"Plant"`
 }
 
+// Header
 type CalculateDeliveryDocumentKey struct {
 	ServiceLabel             string `json:"service_label"`
-	FieldNameWithNumberRange string
+	FieldNameWithNumberRange string `json:"FieldNameWithNumberRange"`
 }
 
 type CalculateDeliveryDocumentQueryGets struct {
 	ServiceLabel                 string `json:"service_label"`
-	FieldNameWithNumberRange     string
-	DeliveryDocumentLatestNumber *int
+	FieldNameWithNumberRange     string `json:"FieldNameWithNumberRange"`
+	DeliveryDocumentLatestNumber *int   `json:"DeliveryDocumentLatestNumber"`
 }
 
 type CalculateDeliveryDocument struct {
-	DeliveryDocumentLatestNumber *int
-	DeliveryDocument             *int `json:"DeliveryDocument"`
+	DeliveryDocumentLatestNumber *int `json:"DeliveryDocumentLatestNumber"`
+	DeliveryDocument             int  `json:"DeliveryDocument"`
 }
 
-type HeaderOrdersHeader struct {
-	DeliveryDocument         *int    `json:"DeliveryDocument"`
-	OrderID                  *int    `json:"OrderID"`
-	OrderType                string  `json:"OrderType"`
-	Buyer                    *int    `json:"Buyer"`
-	Seller                   *int    `json:"Seller"`
-	ContractType             *string `json:"ContractType"`
-	OrderValidityStartDate   *string `json:"OrderValidityStartDate"`
-	OrderValidityEndDate     *string `json:"OrderValidityEndDate"`
-	InvoiceScheduleStartDate *string `json:"InvoiceScheduleStartDate"`
-	InvoiceScheduleEndDate   *string `json:"InvoiceScheduleEndDate"`
-	TransactionCurrency      *string `json:"TransactionCurrency"`
-	Incoterms                *string `json:"Incoterms"`
-	IsExportImportDelivery   *bool   `json:"IsExportImportDelivery"`
+type OrdersHeader struct {
+	OrderID                int     `json:"OrderID"`
+	OrderType              string  `json:"OrderType"`
+	Buyer                  int     `json:"Buyer"`
+	Seller                 int     `json:"Seller"`
+	ContractType           *string `json:"ContractType"`
+	OrderValidityStartDate *string `json:"OrderValidityStartDate"`
+	OrderValidityEndDate   *string `json:"OrderValidityEndDate"`
+	TransactionCurrency    string  `json:"TransactionCurrency"`
+	Incoterms              *string `json:"Incoterms"`
+	BillFromParty          *int    `json:"BillFromParty"`
+	BillToParty            *int    `json:"BillToParty"`
+	BillFromCountry        *string `json:"BillFromCountry"`
+	BillToCountry          *string `json:"BillToCountry"`
+	Payer                  *int    `json:"Payer"`
+	Payee                  *int    `json:"Payee"`
+	IsExportImportDelivery *bool   `json:"IsExportImportDelivery"`
 }
 
-type HeaderOrdersHeaderPartner struct {
-	DeliveryDocument        *int    `json:"DeliveryDocument"`
-	OrderID                 *int    `json:"OrderID"`
+type OrdersHeaderPartner struct {
+	OrderID                 int     `json:"OrderID"`
 	PartnerFunction         string  `json:"PartnerFunction"`
-	BusinessPartner         *int    `json:"BusinessPartner"`
+	BusinessPartner         int     `json:"BusinessPartner"`
 	BusinessPartnerFullName *string `json:"BusinessPartnerFullName"`
 	BusinessPartnerName     *string `json:"BusinessPartnerName"`
 	Organization            *string `json:"Organization"`

@@ -17,25 +17,21 @@ type SDC struct {
 }
 
 type DeliveryDocumentInputParameters struct {
-	IssuingPlantPartnerFunction       string    `json:"IssuingPlantPartnerFunction"`
-	IssuingPlantBusinessPartner       *[]*int   `json:"IssuingPlantBusinessPartner"`
-	IssuingPlantBusinessPartnerFrom   *int      `json:"IssuingPlantBusinessPartnerFrom"`
-	IssuingPlantBusinessPartnerTo     *int      `json:"IssuingPlantBusinessPartnerTo"`
-	IssuingPlant                      *[]*int   `json:"IssuingPlant"`
-	IssuingPlantFrom                  *int      `json:"IssuingPlantFrom"`
-	IssuingPlantTo                    *int      `json:"IssuingPlantTo"`
-	ReceivingPlantPartnerFunction     string    `json:"ReceivingPlantPartnerFunction"`
-	ReceivingPlantBusinessPartner     *[]*int   `json:"ReceivingPlantBusinessPartner"`
-	ReceivingPlantBusinessPartnerFrom *int      `json:"ReceivingPlantBusinessPartnerFrom"`
-	ReceivingPlantBusinessPartnerTo   *int      `json:"ReceivingPlantBusinessPartnerTo"`
-	ReceivingPlant                    *[]*int   `json:"ReceivingPlant"`
-	ReceivingPlantFrom                int       `json:"ReceivingPlantFrom"`
-	ReceivingPlantTo                  int       `json:"ReceivingPlantTo"`
-	ConfirmedDeliveryDate             *[]string `json:"ConfirmedDeliveryDate"`
-	ConfirmedDeliveryDateFrom         string    `json:"ConfirmedDeliveryDateFrom"`
-	ConfirmedDeliveryDateTo           string    `json:"ConfirmedDeliveryDateTo"`
-	ReferenceDocument                 *int      `json:"ReferenceDocument"`
-	ReferenceDocumentItem             *int      `json:"ReferenceDocumentItem"`
+	DeliverToParty            *[]*int    `json:"DeliverToParty"`
+	DeliverToPartyTo          *int       `json:"DeliverToPartyTo"`
+	DeliverToPartyFrom        *int       `json:"DeliverToPartyFrom"`
+	DeliverFromParty          *[]*int    `json:"DeliverFromParty"`
+	DeliverFromPartyTo        *int       `json:"DeliverFromPartyTo"`
+	DeliverFromPartyFrom      *int       `json:"DeliverFromPartyFrom"`
+	DeliverToPlant            *[]*string `json:"DeliverToPlant"`
+	DeliverToPlantTo          *string    `json:"DeliverToPlantTo"`
+	DeliverToPlantFrom        *string    `json:"DeliverToPlantFrom"`
+	DeliverFromPlant          *[]*string `json:"DeliverFromPlant"`
+	DeliverFromPlantTo        *string    `json:"DeliverFromPlantTo"`
+	DeliverFromPlantFrom      *string    `json:"DeliverFromPlantFrom"`
+	ConfirmedDeliveryDate     *[]*string `json:"ConfirmedDeliveryDate"`
+	ConfirmedDeliveryDateTo   *string    `json:"ConfirmedDeliveryDateTo"`
+	ConfirmedDeliveryDateFrom *string    `json:"ConfirmedDeliveryDateFrom"`
 }
 
 type DeliveryDocument struct {

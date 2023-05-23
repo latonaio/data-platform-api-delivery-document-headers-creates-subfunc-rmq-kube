@@ -6,16 +6,16 @@ import (
 	"strings"
 )
 
-func (f *SubFunction) OrdersHeaderPartnerPlant(
+func (f *SubFunction) HeaderPartnerPlant(
 	sdc *api_input_reader.SDC,
 	psdc *api_processing_data_formatter.SDC,
-) (*[]api_processing_data_formatter.OrdersHeaderPartnerPlant, error) {
+) (*[]api_processing_data_formatter.HeaderPartnerPlant, error) {
 	var args []interface{}
 
-	orderItem := psdc.OrderItem
-	repeat := strings.Repeat("?,", len(*orderItem)-1) + "?"
-	for _, tag := range *orderItem {
-		args = append(args, tag.OrderID)
+	orderID := psdc.OrderID
+	repeat := strings.Repeat("?,", len(*orderID)-1) + "?"
+	for _, v := range *orderID {
+		args = append(args, v.OrderID)
 	}
 
 	rows, err := f.db.Query(
@@ -27,7 +27,7 @@ func (f *SubFunction) OrdersHeaderPartnerPlant(
 		return nil, err
 	}
 
-	data, err := psdc.ConvertToOrdersHeaderPartnerPlant(sdc, rows)
+	data, err := psdc.ConvertToHeaderPartnerPlant(rows)
 	if err != nil {
 		return nil, err
 	}

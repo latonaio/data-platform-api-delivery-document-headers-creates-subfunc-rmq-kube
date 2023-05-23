@@ -1,10 +1,9 @@
 package requests
 
-type HeaderOrdersHeaderPartner struct {
-	DeliveryDocument        *int    `json:"DeliveryDocument"`
-	OrderID                 *int    `json:"OrderID"`
+type OrdersHeaderPartner struct {
+	OrderID                 int     `json:"OrderID"`
 	PartnerFunction         string  `json:"PartnerFunction"`
-	BusinessPartner         *int    `json:"BusinessPartner"`
+	BusinessPartner         int     `json:"BusinessPartner"`
 	BusinessPartnerFullName *string `json:"BusinessPartnerFullName"`
 	BusinessPartnerName     *string `json:"BusinessPartnerName"`
 	Organization            *string `json:"Organization"`

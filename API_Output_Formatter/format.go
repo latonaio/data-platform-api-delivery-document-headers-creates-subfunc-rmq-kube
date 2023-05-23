@@ -10,41 +10,34 @@ func ConvertToHeader(
 	sdc *api_input_reader.SDC,
 	psdc *api_processing_data_formatter.SDC,
 ) (*[]Header, error) {
-	orderID := psdc.OrderID
-	headerOrdersHeader := psdc.HeaderOrdersHeader
+	ordersHeader := psdc.OrdersHeader
 	calculateDeliveryDocument := psdc.CalculateDeliveryDocument
-	headers := make([]Header, 0, len(*headerOrdersHeader))
+	headers := make([]Header, 0, len(*ordersHeader))
 
-	for _, v := range *headerOrdersHeader {
-		orderId := v.OrderID
-		for _, orderID := range *orderID {
-			if *orderID.OrderID != *orderId {
-				continue
-			}
-			header := Header{}
-			inputHeader := sdc.DeliveryDocument
-			inputData, err := json.Marshal(inputHeader)
-			if err != nil {
-				return nil, err
-			}
-			err = json.Unmarshal(inputData, &header)
-			if err != nil {
-				return nil, err
-			}
-
-			data, err := json.Marshal(v)
-			if err != nil {
-				return nil, err
-			}
-			err = json.Unmarshal(data, &header)
-			if err != nil {
-				return nil, err
-			}
-
-			header.DeliveryDocument = calculateDeliveryDocument.DeliveryDocumentLatestNumber
-			header.ReferenceDocument = orderID.ReferenceDocument
-			headers = append(headers, header)
+	for _, v := range *ordersHeader {
+		header := Header{}
+		inputHeader := sdc.DeliveryDocument
+		inputData, err := json.Marshal(inputHeader)
+		if err != nil {
+			return nil, err
 		}
+		err = json.Unmarshal(inputData, &header)
+		if err != nil {
+			return nil, err
+		}
+
+		data, err := json.Marshal(v)
+		if err != nil {
+			return nil, err
+		}
+		err = json.Unmarshal(data, &header)
+		if err != nil {
+			return nil, err
+		}
+
+		header.DeliveryDocument = calculateDeliveryDocument.DeliveryDocument
+		headers = append(headers, header)
+
 	}
 
 	return &headers, nil
@@ -54,11 +47,11 @@ func ConvertToHeaderPartner(
 	sdc *api_input_reader.SDC,
 	psdc *api_processing_data_formatter.SDC,
 ) (*[]HeaderPartner, error) {
-	headerOrdersHeaderPartner := psdc.HeaderOrdersHeaderPartner
+	ordersHeaderPartner := psdc.OrdersHeaderPartner
 	calculateDeliveryDocument := psdc.CalculateDeliveryDocument
-	headerPartners := make([]HeaderPartner, 0, len(*headerOrdersHeaderPartner))
+	headerPartners := make([]HeaderPartner, 0, len(*ordersHeaderPartner))
 
-	for _, v := range *headerOrdersHeaderPartner {
+	for _, v := range *ordersHeaderPartner {
 		headerPartner := HeaderPartner{}
 		inputHeaderPartner := sdc.DeliveryDocument.HeaderPartner[0]
 		inputData, err := json.Marshal(inputHeaderPartner)
@@ -79,7 +72,7 @@ func ConvertToHeaderPartner(
 			return nil, err
 		}
 
-		headerPartner.DeliveryDocument = calculateDeliveryDocument.DeliveryDocumentLatestNumber
+		headerPartner.DeliveryDocument = *calculateDeliveryDocument.DeliveryDocumentLatestNumber
 		headerPartners = append(headerPartners, headerPartner)
 	}
 
